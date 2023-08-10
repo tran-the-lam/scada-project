@@ -27,11 +27,12 @@ type OrgSetup struct {
 	TLSCertPath  string
 	PeerEndpoint string
 	GatewayPeer  string
+	MSPID        string
 	Gateway      client.Gateway
 }
 
 var (
-	instance *AppConfig = nil
+	instance *OrgSetup = nil
 	once     sync.Once
 )
 
@@ -46,23 +47,24 @@ func getEnv(key string, fallback interface{}) interface{} {
 	return rValue
 }
 
-func InitConfig() *AppConfig {
-	log.Printf("Initializing connection for %s...\n", setup.OrgName)
+func InitConfig() *OrgSetup {
+	log.Println("Initializing connection")
+	cryptoPath := "/Users/user/Documents/Master/LuanVan/Project/fabric-install/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
 	once.Do(
 		func() {
 			if err := godotenv.Load(); err != nil {
 				log.Fatal("Error loading .env file")
 			}
 
-			instance = &AppConfig{
+			instance = &OrgSetup{
 				PORT:         getEnv("PORT", "").(string),
-				OrgName:      getEnv("ORG_NAME", "").(string),
-				CryptoPath:   getEnv("CRYPTO_PATH", "").(string),
-				CertPath:     getEnv("CERT_PATH", "").(string),
-				KeyPath:      getEnv("KEY_PATH", "").(string),
-				TLSCertPath:  getEnv("TLS_CERT_PATH", "").(string),
-				PeerEndpoint: getEnv("PEER_ENDPOINT", "").(string),
-				GatewayPeer:  getEnv("GATEWAY_PEER", "").(string),
+				OrgName:      "Org1",
+				MSPID:        "Org1MSP",
+				CertPath:     cryptoPath + "/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem",
+				KeyPath:      cryptoPath + "/users/User1@org1.example.com/msp/keystore/",
+				TLSCertPath:  cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt",
+				PeerEndpoint: "localhost:7051",
+				GatewayPeer:  "peer0.org1.example.com",
 			}
 		},
 	)

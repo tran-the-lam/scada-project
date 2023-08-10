@@ -1,7 +1,7 @@
 ./network.sh up createChannel
 
 ## Deploy chaincode
-./network.sh deployCC -ccn basic -ccp /Users/user/Documents/Master/LuanVan/Project/scada/smart-contract/chaincode -ccl go
+./network.sh deployCC -ccn basic -ccp /Users/user/Documents/Master/LuanVan/Project/fabric-install/fabric-samples/scada-project/smart-contract/chaincode -ccl go
 
 
 ## Make env
