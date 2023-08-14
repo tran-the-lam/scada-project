@@ -30,19 +30,19 @@ func (s *service) PutState(ctx context.Context, chainCodeID, channelID, function
 	txn_proposal, err := contract.NewProposal(function, client.WithArguments(args...))
 	if err != nil {
 		fmt.Printf("Error creating txn proposal: %s", err)
-		return err
+		return Error{Err: err, Code: CreateProposalError}
 	}
 
 	txn_endorsed, err := txn_proposal.Endorse()
 	if err != nil {
 		fmt.Printf("Error endorsing txn: %s", err)
-		return err
+		return Error{Err: err, Code: EndorsedError}
 	}
 
 	txn_committed, err := txn_endorsed.Submit()
 	if err != nil {
 		fmt.Printf("Error submitting transaction: %s", err)
-		return err
+		return Error{Err: err, Code: SubmittedError}
 	}
 
 	fmt.Printf("Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result())

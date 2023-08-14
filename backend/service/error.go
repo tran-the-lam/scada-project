@@ -8,3 +8,20 @@ func ErrorResp(e error, statusCode int) *fiber.Map {
 		"status_code": statusCode,
 	}
 }
+
+type Error struct {
+	Err  error
+	Code FError
+}
+
+func (r Error) Error() string {
+	return r.Err.Error()
+}
+
+type FError int
+
+const (
+	EndorsedError FError = iota
+	SubmittedError
+	CreateProposalError
+)

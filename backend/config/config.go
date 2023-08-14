@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"backend/pkg/utils"
+
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
 )
@@ -52,7 +54,7 @@ func InitConfig() *OrgSetup {
 	cryptoPath := "/Users/user/Documents/Master/LuanVan/Project/fabric-install/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
 	once.Do(
 		func() {
-			if err := godotenv.Load(); err != nil {
+			if err := godotenv.Load(utils.ProviderPath(".env")); err != nil {
 				log.Fatal("Error loading .env file")
 			}
 
