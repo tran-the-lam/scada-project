@@ -74,7 +74,6 @@ func TestPutStateWrongChannel(t *testing.T) {
 	}
 
 	for _, test := range testcase {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := svc.PutState(ctx, test.chainCodeID, test.channelID, test.function, test.args)
 			if err != nil {
@@ -92,16 +91,39 @@ func TestPutStateWrongChannel(t *testing.T) {
 }
 
 func TestGetState(t *testing.T) {
-	chainCodeID := "basic"
-	channelID := "mychannel"
-	function := "QueryKey"
-	args := []string{"key1"}
-	res, err := svc.GetState(ctx, chainCodeID, channelID, function, args)
-	if err != nil {
-		t.Errorf("Error: %s", err)
+	var testcase = []struct {
+		name        string
+		chainCodeID string
+		channelID   string
+		function    string
+		args        []string
+		expect      string
+	}{
+		{
+			name:        "Not found key",
+			chainCodeID: "basic",
+			channelID:   "mychannel",
+			function:    "QueryKey",
+			args:        []string{"key2"},
+			expect:      "",
+		},
+		{
+			name:        "Success",
+			chainCodeID: "basic",
+			channelID:   "mychannel",
+			function:    "QueryKey",
+			args:        []string{"key1"},
+			expect:      "value1",
+		},
 	}
 
-	if res != "value1" {
-		t.Errorf("Error: %s", err)
+	for _, test := range testcase {
+		t.Run(test.name, func(t *testing.T) {
+			res, err := svc.GetState(ctx, test.chainCodeID, test.channelID, test.function, test.args)
+			if res != test.expect {
+				t.Errorf("Error: %s", err)
+			}
+		})
 	}
+
 }
