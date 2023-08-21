@@ -57,11 +57,11 @@ make test
 ```
 Kết qủa:
 ```
-go test ./...
+go clean -testcache && go test ./...
 ?       backend/cmd     [no test files]
 ?       backend/config  [no test files]
-?       backend/pkg/utils       [no test files]
-ok      backend/service 0.737s
+ok      backend/pkg/utils       0.165s
+ok      backend/service 0.326s
 ```
 
 #### Chạy test coverage
@@ -74,6 +74,6 @@ Kết quả:
 go test -cover ./...
 ?       backend/cmd     [no test files]
 ?       backend/config  [no test files]
-?       backend/pkg/utils       [no test files]
-ok      backend/service 0.473s  coverage: 38.3% of statements
+ok      backend/pkg/utils       0.290s  coverage: 100.0% of statements
+ok      backend/service (cached)        coverage: 76.6% of statements
 ```
