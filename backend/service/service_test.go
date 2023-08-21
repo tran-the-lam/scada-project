@@ -121,7 +121,7 @@ func TestGetState(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			res, err := svc.GetState(ctx, test.chainCodeID, test.channelID, test.function, test.args)
 			if res != test.expect {
-				t.Errorf("Error: %s", err)
+				t.Errorf("Name: %s Error: %s", test.name, err)
 			}
 		})
 	}

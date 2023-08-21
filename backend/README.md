@@ -15,7 +15,7 @@ Bước 2: Deploy chaincode
 Bước 3: Run project
 ```
 cd backend
-go run cmd/main.go
+make run_api
 ```
 
 [Postman API Documenter](https://documenter.getpostman.com/view/6827911/2s9Xy3sBBT)
@@ -48,3 +48,32 @@ curl --location '{{url}}/scadas/state?chain_code_id=basic&channel_id=mychannel&f
 | args     | Các tham số của hàm thực thi |
 | chain_code_id | Mã chain code |
 | channel_id | Mã channel |
+
+
+#### Chạy test
+
+```
+make test
+```
+Kết qủa:
+```
+go test ./...
+?       backend/cmd     [no test files]
+?       backend/config  [no test files]
+?       backend/pkg/utils       [no test files]
+ok      backend/service 0.737s
+```
+
+#### Chạy test coverage
+```
+make test-cover
+```
+
+Kết quả:
+```
+go test -cover ./...
+?       backend/cmd     [no test files]
+?       backend/config  [no test files]
+?       backend/pkg/utils       [no test files]
+ok      backend/service 0.473s  coverage: 38.3% of statements
+```
