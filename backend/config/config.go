@@ -51,7 +51,7 @@ func getEnv(key string, fallback interface{}) interface{} {
 
 func InitConfig() *OrgSetup {
 	log.Println("Initializing connection")
-	cryptoPath := "/Users/user/Documents/Master/LuanVan/Project/fabric-install/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
+	cryptoPath := "/Users/lamtt/Documents/Learn/Master/Project/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
 	once.Do(
 		func() {
 			if err := godotenv.Load(utils.ProviderPath(".env")); err != nil {
