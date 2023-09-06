@@ -42,6 +42,7 @@ sequenceDiagram
         Fabric -->> Backend API: Return result
         Backend API -->> User: Return result
     else user not existed
+        Fabric -->> Backend API: Return error
         Backend API -->> User: Return error 
     end
 ```
@@ -63,7 +64,7 @@ sequenceDiagram
     Backend API -->>- User: Return result
 ```
 
-#### Các bước thực hiện:
+Các bước thực hiện:
 - [ ] Viết `smart-contract` có chức năng:
     - [ ] `createUser(user_id, password, role)`
     - [ ] `updatePassword(user_id, old_password, new_password)`
