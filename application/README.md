@@ -23,7 +23,7 @@ Các chức năng của `smart contract`:
 - Lấy dữ liệu `role` của `user`
 - Lấy lịch sử truy cập của `user` (cân nhắc thêm - lấy bằng cách quét qua tất cả các transaction)
 
-**Tạo user**
+**Tạo user:**
 ```mermaid
 sequenceDiagram
     Admin->>+Backend API: Create new user(user_id, default password, role)
@@ -32,3 +32,47 @@ sequenceDiagram
     Backend API-->>-Admin: Response
 ```
 
+**User cập nhật mật khẩu:**
+```mermaid
+sequenceDiagram
+    User->>+Backend API: Request update password
+    Backend API->>+ Fabric: Get user info
+    alt user existed
+        Backend API->>+ Fabric: Update password
+        Fabric -->> Backend API: Return result
+        Backend API -->> User: Return result
+    else user not existed
+        Backend API -->> User: Return error 
+    end
+```
+
+**Đăng nhập**
+```mermaid
+sequenceDiagram
+    User ->>+ Backend API: Call api login (user, password)
+    Backend API ->>+ Fabric: Check in blockchain
+    alt existed
+        activate Fabric
+        Fabric -->> Backend API: Return role
+        deactivate Fabric
+    else not existed
+        activate Fabric
+        Fabric -->> Backend API: Return error
+        deactivate Fabric
+    end
+    Backend API -->>- User: Return result
+```
+
+#### Các bước thực hiện:
+- [ ] Viết `smart-contract` có chức năng:
+    - [ ] `createUser(user_id, password, role)`
+    - [ ] `updatePassword(user_id, old_password, new_password)`
+    - [ ] `login(user_id, password)`
+- [ ] Viết `BackendAPI` với các api tương ứng với `smart-contract`:
+    - [ ] '/create-user' (POST)
+    - [ ] '/update-password' (PUT)
+    - [ ] '/login' (POST)
+- [ ] Viết một app demo sử dụng `flutter` về việc đăng nhập, thay đổi mật khẩu, lấy lịch sử truy cập
+    - [ ] Giao diện (Đăng nhập, thêm user, đổi mật khẩu, lịch sử truy cập)
+    - [ ] Xử lý gọi api
+    
