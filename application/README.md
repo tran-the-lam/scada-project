@@ -1,4 +1,4 @@
-### Demo sẽ theo hướng:
+### Hướng tiếp cận:
 **Kiểm soát truy cập:**
 Blockchain có thể được sử dụng để xác thực người dùng và cấp quyền truy cập vào dữ liệu SCADA. Điều này có thể giúp bảo vệ dữ liệu khỏi bị truy cập trái phép.
 
