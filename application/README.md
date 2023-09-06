@@ -22,6 +22,7 @@ Các chức năng của `smart contract`:
 **Tạo user:**
 ```mermaid
 sequenceDiagram
+    Note over Admin: Admin inserted by ledger init function
     Admin->>+Backend API: Create new user(user_id, default password, role)
     Backend API->>+ Fabric: Save user info in blockchain
     Fabric-->>-Backend API: Response
