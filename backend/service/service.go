@@ -3,7 +3,9 @@ package service
 import (
 	"backend/config"
 	"context"
+	"crypto/sha256"
 	"fmt"
+	"hash"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 )
@@ -11,16 +13,33 @@ import (
 type IService interface {
 	PutState(ctx context.Context, chainCodeID, channelID, function string, args []string) error
 	GetState(ctx context.Context, chainCodeID, channelID, function string, args []string) (string, error)
+	CreateUser(ctx context.Context, actorID, userID, pwd, role string) error
+	UpdatePwd(ctx context.Context, chainCodeID, channelID, function string, args []string) error
+	Login(ctx context.Context, chainCodeID, channelID, function string, args []string) (string, error)
 }
 
 type service struct {
-	gateway client.Gateway
+	gateway     client.Gateway
+	h           hash.Hash
+	channelID   string
+	chainCodeID string
 }
 
 func NewService(cfg *config.OrgSetup) IService {
 	return &service{
-		gateway: cfg.Gateway,
+		gateway:     cfg.Gateway,
+		h:           sha256.New(),
+		channelID:   cfg.ChannelID,
+		chainCodeID: cfg.ChainCodeID,
 	}
+}
+
+// Admin password: Scada@123
+func (s *service) genPassword(pwd string, salt string) string {
+	newPwd := pwd + salt
+	s.h.Write([]byte(newPwd))
+	bs := s.h.Sum(nil)
+	return fmt.Sprintf("%x", bs)
 }
 
 func (s *service) PutState(ctx context.Context, chainCodeID, channelID, function string, args []string) error {
@@ -58,4 +77,16 @@ func (s *service) GetState(ctx context.Context, chainCodeID, channelID, function
 		return "", err
 	}
 	return string(evaluateResponse), nil
+}
+
+func (s *service) CreateUser(ctx context.Context, chainCodeID, channelID, args []string) error {
+	// func AddUser
+}
+
+func (s *service) UpdatePwd(ctx context.Context, chainCodeID, channelID, function string, args []string) error {
+
+}
+
+func (s *service) Login(ctx context.Context, chainCodeID, channelID, function string, args []string) (string, error) {
+
 }
