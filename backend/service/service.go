@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/config"
+	"backend/pkg/constant"
 	"context"
 	"crypto/sha256"
 	"fmt"
@@ -155,7 +156,7 @@ func (s *service) Login(ctx context.Context, userID, password string) (string, e
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("secret"))
+	t, err := token.SignedString([]byte(constant.TOKEN_SECRET))
 	if err != nil {
 		return "", err
 	}

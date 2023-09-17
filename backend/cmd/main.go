@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/config"
+	e "backend/pkg/error"
 	"backend/service"
 	"fmt"
 
@@ -10,11 +11,10 @@ import (
 
 func main() {
 	cfg := config.InitConfig()
-	app := fiber.New()
-
-	// app.Use(jwtware.New(jwtware.Config{
-	// 	SigningKey: jwtware.SigningKey{Key: []byte("secret")},
-	// }))
+	app := fiber.New(fiber.Config{
+		AppName:      "Scada Project",
+		ErrorHandler: e.HandleError,
+	})
 
 	svc := service.NewService(cfg)
 	service.Route(app, svc)
