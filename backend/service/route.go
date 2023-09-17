@@ -12,6 +12,7 @@ func Route(app fiber.Router, service IService) {
 
 	api := app.Group("/users", middleware.Auth)
 	api.Get("/state", GetStateHdl(service))
-	api.Post("/state", PutStateHdl(service))
+	api.Post("", AddUserHdl(service))
+
 	// api.Put("/password", UpdatePwdHdl(service))
 }

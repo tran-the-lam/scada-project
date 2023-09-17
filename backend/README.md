@@ -78,17 +78,3 @@ go test -cover ./...
 ok      backend/pkg/utils       0.290s  coverage: 100.0% of statements
 ok      backend/service (cached)        coverage: 76.6% of statements
 ```
-
-
-Em đang nghĩ tới là sẽ làm lưu thông tin của những lần cảm biến đó được các chỉ số (nhiệt độ, áp suất) vượt ngưỡng giới hạn
-Ví dụ mẫu về JSON lưu trên Hyperledger:
-{
-   "event": "limit_exceeded",
-   "sensor_id": "ABC123",
-   "parameter": "temperature", // tham số vượt ngưỡng
-   "value": 40.0, // Gía trị trên cảm biến
-   "threshold": 35.0, // Giá trị an toàn được thiết lập
-   "timestamp": 1694861094012 // Thời gian ghi nhận
-}
-
-Project sẽ bổ sung thêm api `post` để đẩy dữ liệu khi cảm biến đo được các chỉ số vượt mức giới hạn và api `get` để lọc các sự kiện theo range timestamp. Demo ứng dụng sẽ thêm một màn hình hiển thị lịch sử(cho phép filter theo thời gian, loại chỉ số, sensor_id) những sự kiện vượt quá ngưỡng an toàn

@@ -1,6 +1,8 @@
 package error
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -30,11 +32,11 @@ func Unauthorized() ApiError {
 	}
 }
 
-func BadRequest() ApiError {
+func BadRequest(msg string) ApiError {
 	return ApiError{
 		HttpCode: 400,
 		Code:     10003,
-		Message:  "Bad request",
+		Message:  msg,
 	}
 }
 
@@ -46,12 +48,37 @@ func NotFound() ApiError {
 	}
 }
 
+func Forbidden() ApiError {
+	return ApiError{
+		HttpCode: 403,
+		Code:     10005,
+		Message:  "Forbidden",
+	}
+}
+
+func TxErr(msg string) ApiError {
+	return ApiError{
+		HttpCode: 500,
+		Code:     10006,
+		Message:  msg,
+	}
+}
+
 func HandleError(ctx *fiber.Ctx, err error) error {
 	switch err.(type) {
 	case ApiError:
 		apiError := err.(ApiError)
 		return ctx.Status(apiError.HttpCode).JSON(apiError)
 	default:
+		fmt.Printf("Internal Error: %s", err.Error())
 		return ctx.Status(500).JSON(InternalServerError())
 	}
 }
+
+type FError int
+
+const (
+	EndorsedError FError = iota
+	SubmittedError
+	CreateProposalError
+)

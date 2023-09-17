@@ -1,8 +1,10 @@
 package service
 
 import (
+	"backend/pkg/constant"
+	e "backend/pkg/error"
+
 	"fmt"
-	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,14 +24,14 @@ func LoginHdl(service IService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var body LoginBody
 		if err := c.BodyParser(&body); err != nil {
-			return c.Status(http.StatusBadRequest).JSON(ErrorResp(err, http.StatusBadRequest))
+			return e.BadRequest(err.Error())
 		}
 
 		fmt.Printf("====PutStateHdl %+v\n", body)
 
 		token, err := service.Login(c.Context(), body.UserID, body.Pwd)
 		if err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(ErrorResp(err, http.StatusInternalServerError))
+			return err
 		}
 
 		return c.JSON(Response{"success", "", token})
@@ -44,37 +46,38 @@ func GetStateHdl(service IService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var query GetStateQuery
 		if err := c.QueryParser(&query); err != nil {
-			return c.Status(http.StatusBadRequest).JSON(ErrorResp(err, http.StatusBadRequest))
+			return e.BadRequest(err.Error())
 		}
 
-		rs, err := service.GetState(c.Context(), query.Key)
-		fmt.Printf("====GetStateHdl %+v\n == %+v", query, rs)
-
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+		rs, err := service.GetState(c.Context(), actorID, actorRole, query.Key)
 		if err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(ErrorResp(err, http.StatusInternalServerError))
+			return err
 		}
 
 		return c.JSON(Response{"success", rs, ""})
 	}
 }
 
-type PutStateBody struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+type AddUserBody struct {
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
+	Pwd    string `json:"password"`
 }
 
-func PutStateHdl(service IService) fiber.Handler {
+func AddUserHdl(service IService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var body PutStateBody
+		var body AddUserBody
 		if err := c.BodyParser(&body); err != nil {
-			return c.Status(http.StatusBadRequest).JSON(ErrorResp(err, http.StatusBadRequest))
+			return e.BadRequest(err.Error())
 		}
 
-		err := service.PutState(c.Context(), body.Key, body.Value)
-		fmt.Printf("====GetStateHdl %+v\n == ", err)
-
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+		err := service.AddUser(c.Context(), actorID, actorRole, body.UserID, body.Pwd, body.Role)
 		if err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(ErrorResp(err, http.StatusInternalServerError))
+			return err
 		}
 
 		return c.JSON(Response{"success", "", ""})

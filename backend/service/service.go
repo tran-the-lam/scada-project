@@ -3,6 +3,7 @@ package service
 import (
 	"backend/config"
 	"backend/pkg/constant"
+	e "backend/pkg/error"
 	"context"
 	"crypto/sha256"
 	"fmt"
@@ -15,10 +16,10 @@ import (
 
 type IService interface {
 	PutState(ctx context.Context, key, val string) error
-	GetState(ctx context.Context, key string) (string, error)
-	CreateUser(ctx context.Context, actorID, userID, pwd, role string) error
+	GetState(ctx context.Context, actorID, actorRole, key string) (string, error)
 	UpdatePwd(ctx context.Context, chainCodeID, channelID, function string, args []string) error
 	Login(ctx context.Context, userID, pwd string) (string, error)
+	AddUser(ctx context.Context, actorID, actorRole, userID, pwd, role string) error
 }
 
 type service struct {
@@ -29,7 +30,7 @@ type service struct {
 }
 
 func NewService(cfg *config.OrgSetup) IService {
-	fmt.Printf("Init service %s = %s", cfg.ChannelID, cfg.ChainCodeID)
+	fmt.Printf("Init service %s = %s = %s \n", cfg.ChannelID, cfg.ChainCodeID, cfg.SaltPwd)
 	svc := &service{
 		gateway:  cfg.Gateway,
 		h:        sha256.New(),
@@ -39,6 +40,7 @@ func NewService(cfg *config.OrgSetup) IService {
 
 	// init admin info
 	svc.initAdmin()
+
 	return svc
 }
 
@@ -50,27 +52,33 @@ func (s *service) genPassword(pwd string) string {
 	return fmt.Sprintf("%x", bs)
 }
 
+func (s *service) execTxn(txn *client.Proposal) error {
+	txn_endorsed, err := txn.Endorse()
+	if err != nil {
+		fmt.Printf("Error endorsing txn: %s", err)
+		return e.TxErr(err.Error())
+	}
+
+	txn_committed, err := txn_endorsed.Submit()
+	if err != nil {
+		fmt.Printf("Error submitting transaction: %s", err)
+		return e.TxErr(err.Error())
+	}
+
+	fmt.Printf("Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result())
+
+	return nil
+}
+
 // Trigger init admin when start service
 func (s *service) initAdmin() error {
 	txn_proposal, err := s.contract.NewProposal("Init", client.WithArguments())
 	if err != nil {
 		fmt.Printf("Error creating txn proposal: %s", err)
-		return Error{Err: err, Code: CreateProposalError}
+		return e.TxErr(err.Error())
 	}
 
-	txn_endorsed, err := txn_proposal.Endorse()
-	if err != nil {
-		fmt.Printf("Error endorsing txn: %s", err)
-		return Error{Err: err, Code: EndorsedError}
-	}
-
-	_, err = txn_endorsed.Submit()
-	if err != nil {
-		fmt.Printf("Error submitting transaction: %s", err)
-		return Error{Err: err, Code: SubmittedError}
-	}
-
-	return nil
+	return s.execTxn(txn_proposal)
 }
 
 func (s *service) PutState(ctx context.Context, key, val string) error {
@@ -78,26 +86,18 @@ func (s *service) PutState(ctx context.Context, key, val string) error {
 	txn_proposal, err := s.contract.NewProposal("CreateKey", client.WithArguments(args...))
 	if err != nil {
 		fmt.Printf("Error creating txn proposal: %s", err)
-		return Error{Err: err, Code: CreateProposalError}
+		return e.TxErr(err.Error())
 	}
 
-	txn_endorsed, err := txn_proposal.Endorse()
-	if err != nil {
-		fmt.Printf("Error endorsing txn: %s", err)
-		return Error{Err: err, Code: EndorsedError}
-	}
-
-	txn_committed, err := txn_endorsed.Submit()
-	if err != nil {
-		fmt.Printf("Error submitting transaction: %s", err)
-		return Error{Err: err, Code: SubmittedError}
-	}
-
-	fmt.Printf("Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result())
-	return nil
+	return s.execTxn(txn_proposal)
 }
 
-func (s *service) GetState(ctx context.Context, key string) (string, error) {
+func (s *service) GetState(ctx context.Context, actorID, actorRole, key string) (string, error) {
+	// Only admin can query all key
+	if actorRole != "admin" && actorID != key {
+		return "", e.Forbidden()
+	}
+
 	evaluateResponse, err := s.contract.EvaluateTransaction("QueryKey", key)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
@@ -106,38 +106,9 @@ func (s *service) GetState(ctx context.Context, key string) (string, error) {
 	return string(evaluateResponse), nil
 }
 
-func (s *service) CreateUser(ctx context.Context, actorID, userID, role, password string) error {
-	// func AddUser
-	args := []string{actorID, userID, role, password}
-	txn_proposal, err := s.contract.NewProposal("AddUser", client.WithArguments(args...))
-	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
-		return Error{Err: err, Code: CreateProposalError}
-	}
-
-	txn_endorsed, err := txn_proposal.Endorse()
-	if err != nil {
-		fmt.Printf("Error endorsing txn: %s", err)
-		return Error{Err: err, Code: EndorsedError}
-	}
-
-	txn_committed, err := txn_endorsed.Submit()
-	if err != nil {
-		fmt.Printf("Error submitting transaction: %s", err)
-		return Error{Err: err, Code: SubmittedError}
-	}
-
-	fmt.Printf("Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result())
-	return nil
-}
-
-func (s *service) UpdatePwd(ctx context.Context, chainCodeID, channelID, function string, args []string) error {
-	return nil
-}
-
 func (s *service) Login(ctx context.Context, userID, password string) (string, error) {
 	hashPwd := s.genPassword(password)
-	fmt.Printf("Hash PWD: %s", hashPwd)
+	fmt.Println("Login", userID, hashPwd)
 	args := []string{userID, hashPwd}
 	roleResponse, err := s.contract.EvaluateTransaction("VerifyUser", args...)
 	if err != nil {
@@ -147,9 +118,9 @@ func (s *service) Login(ctx context.Context, userID, password string) (string, e
 
 	// Gen token
 	claims := jwt.MapClaims{
-		"user_id": userID,
-		"role":    roleResponse,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+		"user_id":   userID,
+		"user_role": string(roleResponse),
+		"exp":       time.Now().Add(time.Hour * 72).Unix(),
 	}
 
 	// Create token
@@ -162,4 +133,24 @@ func (s *service) Login(ctx context.Context, userID, password string) (string, e
 	}
 
 	return t, nil
+}
+
+func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, pwd, role string) error {
+	fmt.Println("AddUser", actorID, actorRole, userID, pwd, role)
+	if actorRole != "admin" {
+		return e.Forbidden()
+	}
+
+	args := []string{actorID, userID, role, s.genPassword(pwd)}
+	txn_proposal, err := s.contract.NewProposal("AddUser", client.WithArguments(args...))
+	if err != nil {
+		fmt.Printf("Error creating txn proposal: %s", err)
+		return e.TxErr(err.Error())
+	}
+
+	return s.execTxn(txn_proposal)
+}
+
+func (s *service) UpdatePwd(ctx context.Context, chainCodeID, channelID, function string, args []string) error {
+	return nil
 }

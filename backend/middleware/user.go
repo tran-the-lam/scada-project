@@ -30,7 +30,7 @@ func userAuth(c *fiber.Ctx) error {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		c.Locals(constant.LOCAL_USER_ID, claims["user_id"])
-		c.Locals(constant.LOCAL_USER_ROLE, claims["role"])
+		c.Locals(constant.LOCAL_USER_ROLE, claims["user_role"])
 		return c.Next()
 	} else {
 		return e.Unauthorized()
