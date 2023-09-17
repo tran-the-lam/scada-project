@@ -24,13 +24,16 @@ type User struct {
 	Password string `json:"password"`
 }
 
-func getLoginKey(user string) string {
-	return fmt.Sprintf("login_%s", user)
+type Event struct {
+	Event     string  `json:"event"`
+	SensorID  string  `json:"sensor_id"`
+	Parameter string  `json:"parameter"`
+	Value     float64 `json:"value"`
+	Threshold float64 `json:"threshold"`
+	Timestamp uint64  `json:"timestamp"`
 }
 
-// Phần generate admin có thể truyền vào là public key của admin và password đã được hash trước đó
-func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
-
+func (s *SmartContract) Init(ctx contractapi.TransactionContextInterface) error {
 	// Create User With Admin Role
 	admin := User{
 		UserID:   "admin",
@@ -168,6 +171,100 @@ func (s *SmartContract) UpdatePassword(ctx contractapi.TransactionContextInterfa
 	}
 
 	return nil
+}
+
+func (s *SmartContract) AddEvent(ctx contractapi.TransactionContextInterface, eventName, sensorID, parameter string, value, threshold float64, timestamp uint64) error {
+	event := Event{
+		Event:     eventName,
+		SensorID:  sensorID,
+		Parameter: parameter,
+		Value:     value,
+		Threshold: threshold,
+		Timestamp: timestamp,
+	}
+
+	eventJSON, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	// Set value for sensor_id key
+	if err := ctx.GetStub().PutState(event.SensorID, eventJSON); err != nil {
+		return fmt.Errorf("failed to put to world state. %s", err.Error())
+	}
+
+	// Set value for parameter key
+	if err := ctx.GetStub().PutState(event.Parameter, eventJSON); err != nil {
+		return fmt.Errorf("failed to put to world state. %s", err.Error())
+	}
+
+	// Why save value for sensor_id and parameter key?
+	// Because we can query by sensor_id or parameter
+	return nil
+}
+
+func (s *SmartContract) GetEventsBySensorAndTime(ctx contractapi.TransactionContextInterface, sensorID string, startTimestamp, endTimestamp string) ([]*Event, error) {
+	// Xây dựng khóa tìm kiếm bằng cách kết hợp 'sensorID' và khoảng thời gian 'startTimestamp' và 'endTimestamp'
+	startKey := fmt.Sprintf("%s-%s", sensorID, startTimestamp)
+	endKey := fmt.Sprintf("%s-%s", sensorID, endTimestamp)
+
+	// Lấy danh sách các sự kiện theo khoá tìm kiếm đã xây dựng
+	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get events by sensor and time: %v", err)
+	}
+	defer resultsIterator.Close()
+
+	// Đọc và giải mã các sự kiện từ iterator
+	var events []*Event
+	for resultsIterator.HasNext() {
+		responseRange, err := resultsIterator.Next()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get next event by sensor and time: %v", err)
+		}
+
+		event := new(Event)
+		err = json.Unmarshal(responseRange.Value, event)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal event data: %v", err)
+		}
+
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+func GetEventsBySensorAndTime(ctx contractapi.TransactionContextInterface, sensorID string, startTimestamp, endTimestamp string) ([]*Event, error) {
+	// Xây dựng khóa tìm kiếm bằng cách kết hợp 'sensorID' và khoảng thời gian 'startTimestamp' và 'endTimestamp'
+	startKey := fmt.Sprintf("%s-%s", sensorID, startTimestamp)
+	endKey := fmt.Sprintf("%s-%s", sensorID, endTimestamp)
+
+	// Lấy danh sách các sự kiện theo khoá tìm kiếm đã xây dựng
+	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get events by sensor and time: %v", err)
+	}
+	defer resultsIterator.Close()
+
+	// Đọc và giải mã các sự kiện từ iterator
+	var events []*Event
+	for resultsIterator.HasNext() {
+		responseRange, err := resultsIterator.Next()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get next event by sensor and time: %v", err)
+		}
+
+		event := new(Event)
+		err = json.Unmarshal(responseRange.Value, event)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal event data: %v", err)
+		}
+
+		events = append(events, event)
+	}
+
+	return events, nil
 }
 
 func main() {
