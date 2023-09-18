@@ -31,6 +31,9 @@ type OrgSetup struct {
 	GatewayPeer  string
 	MSPID        string
 	Gateway      client.Gateway
+	SaltPwd      string
+	ChannelID    string
+	ChainCodeID  string
 }
 
 var (
@@ -59,6 +62,9 @@ func InitConfig() *OrgSetup {
 			}
 
 			instance = &OrgSetup{
+				ChainCodeID:  getEnv("CHAINCODE_ID", "").(string),
+				ChannelID:    getEnv("CHANNEL_ID", "").(string),
+				SaltPwd:      getEnv("SALT_PWD", "").(string),
 				PORT:         getEnv("PORT", "").(string),
 				OrgName:      "Org1",
 				MSPID:        "Org1MSP",

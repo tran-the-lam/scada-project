@@ -9,7 +9,7 @@ Bước 1: Cài đặt Hyperledger Fabric
 
 Bước 2: Deploy chaincode
 ```
-cd scada-project
+cd ../scada-project
 ../test-network/network.sh deployCC -ccn basic -ccp $PWD/smart-contract/chaincode -ccl go
 ```
 

@@ -73,4 +73,7 @@ Các bước thực hiện:
 - [ ] Viết một app demo sử dụng `flutter` về việc đăng nhập, thay đổi mật khẩu, lấy lịch sử truy cập
     - [ ] Giao diện (Đăng nhập, thêm user, đổi mật khẩu, lịch sử truy cập)
     - [ ] Xử lý gọi api
-    
+- [ ] Viết luận văn
+    - [ ] Làm word latex
+    - [ ] Làm slide latex
+    - [ ] Quay video demo
