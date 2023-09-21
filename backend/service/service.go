@@ -17,7 +17,7 @@ import (
 type IService interface {
 	PutState(ctx context.Context, key, val string) error
 	GetState(ctx context.Context, actorID, actorRole, key string) (string, error)
-	UpdatePwd(ctx context.Context, chainCodeID, channelID, function string, args []string) error
+	UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error
 	Login(ctx context.Context, userID, pwd string) (string, error)
 	AddUser(ctx context.Context, actorID, actorRole, userID, pwd, role string) error
 }
@@ -43,12 +43,9 @@ func NewService(cfg *config.OrgSetup) IService {
 
 	return svc
 }
-
-// Admin password: Scada@123
-func (s *service) genPassword(pwd string) string {
-	newPwd := pwd + s.saltPwd
-	s.h.Write([]byte(newPwd))
-	bs := s.h.Sum(nil)
+func (s *service) hashPassword(pwd string) string {
+	newPwd := fmt.Sprintf("%s%s", pwd, s.saltPwd)
+	bs := sha256.Sum256([]byte(newPwd))
 	return fmt.Sprintf("%x", bs)
 }
 
@@ -107,13 +104,13 @@ func (s *service) GetState(ctx context.Context, actorID, actorRole, key string) 
 }
 
 func (s *service) Login(ctx context.Context, userID, password string) (string, error) {
-	hashPwd := s.genPassword(password)
+	hashPwd := s.hashPassword(password)
 	fmt.Println("Login", userID, hashPwd)
 	args := []string{userID, hashPwd}
 	roleResponse, err := s.contract.EvaluateTransaction("VerifyUser", args...)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
-		return "", err
+		return "", e.LoginFailed()
 	}
 
 	// Gen token
@@ -141,7 +138,7 @@ func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, pwd, 
 		return e.Forbidden()
 	}
 
-	args := []string{actorID, userID, role, s.genPassword(pwd)}
+	args := []string{actorID, userID, role, s.hashPassword(pwd)}
 	txn_proposal, err := s.contract.NewProposal("AddUser", client.WithArguments(args...))
 	if err != nil {
 		fmt.Printf("Error creating txn proposal: %s", err)
@@ -151,6 +148,14 @@ func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, pwd, 
 	return s.execTxn(txn_proposal)
 }
 
-func (s *service) UpdatePwd(ctx context.Context, chainCodeID, channelID, function string, args []string) error {
-	return nil
+func (s *service) UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error {
+	fmt.Println("Update password", userID, oldPwd, newPwd)
+	args := []string{userID, s.hashPassword(oldPwd), s.hashPassword(newPwd)}
+	txn_proposal, err := s.contract.NewProposal("UpdatePwd", client.WithArguments(args...))
+	if err != nil {
+		fmt.Printf("Error creating txn proposal: %s", err)
+		return e.TxErr(err.Error())
+	}
+
+	return s.execTxn(txn_proposal)
 }

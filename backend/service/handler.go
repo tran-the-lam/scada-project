@@ -83,3 +83,25 @@ func AddUserHdl(service IService) fiber.Handler {
 		return c.JSON(Response{"success", "", ""})
 	}
 }
+
+type UpdatePwdBody struct {
+	OldPwd string `json:"old_password"`
+	NewPwd string `json:"new_password"`
+}
+
+func UpdatePwdHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var body UpdatePwdBody
+		if err := c.BodyParser(&body); err != nil {
+			return e.BadRequest(err.Error())
+		}
+
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		err := service.UpdatePwd(c.Context(), actorID, body.OldPwd, body.NewPwd)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", "", ""})
+	}
+}
