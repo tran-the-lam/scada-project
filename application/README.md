@@ -61,17 +61,33 @@ sequenceDiagram
     Backend API -->>- User: Return result
 ```
 
+Event example: 
+```
+{
+   "event": "limit_exceeded",
+   "sensor_id": "ABC123",
+   "parameter": "temperature", // tham số vượt ngưỡng
+   "value": 40.0, // Gía trị trên cảm biến
+   "threshold": 35.0, // Giá trị an toàn được thiết lập
+   "timestamp": 1694861094012 // Thời gian ghi nhận
+}
+```
+
 Các bước thực hiện:
 - [ ] Viết `smart-contract` có chức năng:
     - [ ] `createUser(user_id, password, role)`
     - [ ] `updatePassword(user_id, old_password, new_password)`
     - [ ] `login(user_id, password)`
+    - [ ] `save event`
+    - [ ] `filter event by time and parameter`
 - [ ] Viết `BackendAPI` với các api tương ứng với `smart-contract`:
-    - [ ] '/create-user' (POST)
-    - [ ] '/update-password' (PUT)
-    - [ ] '/login' (POST)
+    - [ ] `/create-user` (POST)
+    - [ ] `/update-password` (PUT)
+    - [ ] `/login` (POST)
+    - [ ] `/event` (POST)
+    - [ ] `/event` (GET)
 - [ ] Viết một app demo sử dụng `flutter` về việc đăng nhập, thay đổi mật khẩu, lấy lịch sử truy cập
-    - [ ] Giao diện (Đăng nhập, thêm user, đổi mật khẩu, lịch sử truy cập)
+    - [ ] Giao diện (Đăng nhập, thêm user, đổi mật khẩu, lịch sử truy cập, lọc event)
     - [ ] Xử lý gọi api
 - [ ] Viết luận văn
     - [ ] Làm word latex
