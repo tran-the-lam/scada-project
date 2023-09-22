@@ -11,7 +11,7 @@ require (
 	github.com/hyperledger/fabric-gateway v1.3.2
 	github.com/hyperledger/fabric-protos-go-apiv2 v0.2.1 // indirect
 	github.com/joho/godotenv v1.5.1
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.58.2
 )
 
 require (
