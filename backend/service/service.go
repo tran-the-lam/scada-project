@@ -151,7 +151,7 @@ func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, pwd, 
 func (s *service) UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error {
 	fmt.Println("Update password", userID, oldPwd, newPwd)
 	args := []string{userID, s.hashPassword(oldPwd), s.hashPassword(newPwd)}
-	txn_proposal, err := s.contract.NewProposal("UpdatePwd", client.WithArguments(args...))
+	txn_proposal, err := s.contract.NewProposal("UpdatePassword", client.WithArguments(args...))
 	if err != nil {
 		fmt.Printf("Error creating txn proposal: %s", err)
 		return e.TxErr(err.Error())
