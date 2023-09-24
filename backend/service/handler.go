@@ -105,3 +105,16 @@ func UpdatePwdHdl(service IService) fiber.Handler {
 		return c.JSON(Response{"success", "", ""})
 	}
 }
+
+func GetHistoryHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+		rs, err := service.GetHistory(c.Context(), actorID, actorRole, actorID)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", rs, ""})
+	}
+}

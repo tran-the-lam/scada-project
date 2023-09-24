@@ -14,4 +14,5 @@ func Route(app fiber.Router, service IService) {
 	api.Get("/state", GetStateHdl(service))
 	api.Post("", AddUserHdl(service))
 	api.Put("/password", UpdatePwdHdl(service))
+	api.Get("/history", GetHistoryHdl(service))
 }

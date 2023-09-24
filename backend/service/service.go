@@ -20,6 +20,7 @@ type IService interface {
 	UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error
 	Login(ctx context.Context, userID, pwd string) (string, error)
 	AddUser(ctx context.Context, actorID, actorRole, userID, pwd, role string) error
+	GetHistory(ctx context.Context, actorID, actorRole, key string) (string, error)
 }
 
 type service struct {
@@ -158,4 +159,21 @@ func (s *service) UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) 
 	}
 
 	return s.execTxn(txn_proposal)
+}
+
+func (s *service) GetHistory(ctx context.Context, actorID, actorRole, key string) (string, error) {
+	// Only admin can query all key
+	if actorRole != "admin" && actorID != key {
+		return "", e.Forbidden()
+	}
+
+	args := []string{key}
+	evaluateResponse, err := s.contract.EvaluateTransaction("GetTransactionHistory", args...)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return "", err
+	}
+
+	fmt.Printf("GetHistory Query Response: %s\n", string(evaluateResponse))
+	return string(evaluateResponse), nil
 }
