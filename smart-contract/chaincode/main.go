@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -113,11 +114,13 @@ func (s *SmartContract) AddUser(ctx contractapi.TransactionContextInterface, act
 	if err := ctx.GetStub().PutState(user.UserID, userJSON); err != nil {
 		return fmt.Errorf("failed to put to world state. %s", err.Error())
 	}
+
 	return nil
 }
 
-func (s *SmartContract) VerifyUser(ctx contractapi.TransactionContextInterface, userID string, password string) (string, error) {
+func (s *SmartContract) VerifyUser(ctx contractapi.TransactionContextInterface, userID, password string) (string, error) {
 	// Get user from Fabric
+	log.Println("VerifyUser", userID, password)
 	userInfo, err := ctx.GetStub().GetState(userID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get from world state. %s", err.Error())
@@ -137,6 +140,30 @@ func (s *SmartContract) VerifyUser(ctx contractapi.TransactionContextInterface, 
 	}
 
 	return user.Role, nil
+}
+
+func (s *SmartContract) SaveLoginInfo(ctx contractapi.TransactionContextInterface, userID, ip, userAgent, deviceID, time string) error {
+	// Save login info
+	li := LoginInfo{
+		Ip:        ip,
+		UserAgent: userAgent,
+		DeviceID:  deviceID,
+		Time:      time,
+	}
+
+	liJSON, err := json.Marshal(li)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("login:%s", userID)
+	log.Println("Save login info", key, ip, userAgent, deviceID, time)
+
+	if err := ctx.GetStub().PutState(key, liJSON); err != nil {
+		return fmt.Errorf("failed to put to world state. %s", err.Error())
+	}
+
+	return nil
 }
 
 func (s *SmartContract) UpdatePassword(ctx contractapi.TransactionContextInterface, userID, oldPwd, newPwd string) error {
@@ -171,6 +198,31 @@ func (s *SmartContract) UpdatePassword(ctx contractapi.TransactionContextInterfa
 	}
 
 	return nil
+}
+
+func (s *SmartContract) GetTransactionHistory(ctx contractapi.TransactionContextInterface, key string) ([]LoginInfo, error) {
+	var transactions []LoginInfo
+	resultsIterator, err := ctx.GetStub().GetHistoryForKey(key)
+	if err != nil {
+		return transactions, fmt.Errorf("GetTransactionHistory exec error: %v", err)
+	}
+	defer resultsIterator.Close()
+
+	for resultsIterator.HasNext() {
+		response, err := resultsIterator.Next()
+		if err != nil {
+			return transactions, fmt.Errorf("GetTransactionHistory iterator error: %v", err)
+		}
+
+		var transaction LoginInfo
+		if err := json.Unmarshal(response.Value, &transaction); err != nil {
+			return transactions, fmt.Errorf("GetTransactionHistory unmarshal error: %v", err)
+		}
+
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, nil
 }
 
 func (s *SmartContract) AddEvent(ctx contractapi.TransactionContextInterface, eventName, sensorID, parameter string, value, threshold float64, timestamp uint64) error {

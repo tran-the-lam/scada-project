@@ -11,13 +11,14 @@ import (
 
 type Response struct {
 	Message string `json:"message"`
-	Data    string `json:"data,omitempty"`
+	Data    any    `json:"data,omitempty"`
 	Token   string `json:"token,omitempty"`
 }
 
 type LoginBody struct {
-	UserID string `json:"user_id"`
-	Pwd    string `json:"password"`
+	UserID   string `json:"user_id"`
+	Pwd      string `json:"password"`
+	DeviceID string `json:"device_id"`
 }
 
 func LoginHdl(service IService) fiber.Handler {
@@ -27,9 +28,10 @@ func LoginHdl(service IService) fiber.Handler {
 			return e.BadRequest(err.Error())
 		}
 
-		fmt.Printf("====PutStateHdl %+v\n", body)
-
-		token, err := service.Login(c.Context(), body.UserID, body.Pwd)
+		fmt.Printf("====Login Hdl %+v\n", body)
+		userAgent := c.Get("User-Agent")
+		ip := c.Get("Remote-Address")
+		token, err := service.Login(c.Context(), body.UserID, ip, userAgent, body.DeviceID, body.Pwd)
 		if err != nil {
 			return err
 		}
@@ -106,11 +108,24 @@ func UpdatePwdHdl(service IService) fiber.Handler {
 	}
 }
 
-func GetHistoryHdl(service IService) fiber.Handler {
+func GetHistoryChangePasswordHdl(service IService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
 		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
-		rs, err := service.GetHistory(c.Context(), actorID, actorRole, actorID)
+		rs, err := service.GetHistoryChangePassword(c.Context(), actorID, actorRole, actorID)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", rs, ""})
+	}
+}
+
+func GetHistoryLoginHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+		rs, err := service.GetHistoryLogin(c.Context(), actorID, actorRole, actorID)
 		if err != nil {
 			return err
 		}

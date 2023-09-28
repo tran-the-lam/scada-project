@@ -21,7 +21,7 @@ func userAuth(c *fiber.Ctx) error {
 
 	token, _ := jwt.Parse(reqToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
@@ -31,6 +31,9 @@ func userAuth(c *fiber.Ctx) error {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		c.Locals(constant.LOCAL_USER_ID, claims["user_id"])
 		c.Locals(constant.LOCAL_USER_ROLE, claims["user_role"])
+		c.Locals(constant.LOCAL_IP_ADDR, c.Get("ip-addr"))
+		c.Locals(constant.LOCAL_DEVICE_ID, c.Get("device-id"))
+		c.Locals(constant.LOCAL_USER_AGENT, c.Get("user-agent"))
 		return c.Next()
 	} else {
 		return e.Unauthorized()
