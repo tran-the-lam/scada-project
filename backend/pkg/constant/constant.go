@@ -8,4 +8,6 @@ const (
 	LOCAL_IP_ADDR    = "ip_addr"
 	LOCAL_USER_AGENT = "user_agent"
 	TOKEN_SECRET     = "secret"
+
+	API_KEY = "scada-api-key"
 )

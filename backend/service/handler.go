@@ -133,3 +133,30 @@ func GetHistoryLoginHdl(service IService) fiber.Handler {
 		return c.JSON(Response{"success", rs, ""})
 	}
 }
+
+func AddEventHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var body Event
+		if err := c.BodyParser(&body); err != nil {
+			return e.BadRequest(err.Error())
+		}
+
+		err := service.AddEvent(c.Context(), body)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func GetEventHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", rs, ""})
+	}
+}

@@ -42,7 +42,12 @@ func userAuth(c *fiber.Ctx) error {
 
 func sensorAuth(c *fiber.Ctx) error {
 	// Todo Validate api key in here
-	return nil
+	apiKey := c.Get("X-Scada-Api-Key")
+	if apiKey != constant.API_KEY {
+		return e.Unauthorized()
+	}
+
+	return c.Next()
 }
 
 func Auth(c *fiber.Ctx) error {

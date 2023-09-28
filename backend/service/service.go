@@ -23,6 +23,8 @@ type IService interface {
 	AddUser(ctx context.Context, actorID, actorRole, userID, pwd, role string) error
 	GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error)
 	GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error)
+	AddEvent(ctx context.Context, event Event) error
+	GetEvent(ctx context.Context, actorID, actorRole, sensorID string) ([]Event, error)
 }
 
 type service struct {
@@ -214,4 +216,34 @@ func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key s
 	}
 
 	return rp, nil
+}
+
+func (s *service) AddEvent(ctx context.Context, event Event) error {
+	fmt.Println("AddEvent: %+v", event)
+	args := []interface{event.Event, event.SensorID, event.Parameter, event.Value, event.Threshold, event.Timestamp}
+	txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
+	if err != nil {
+		fmt.Printf("Error creating txn proposal: %s", err)
+		return e.TxErr(err.Error())
+	}
+
+	return s.execTxn(txn_proposal)
+}
+
+func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID string) ([]Event, error) {
+	var rp []Event
+	
+	args := []string{sensorID}
+	evaluateResponse, err := s.contract.EvaluateTransaction("GetEvent", args...)
+	if err != nil {
+		return rp, err
+	}
+
+	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
+	if err != nil {
+		panic(err)
+	}
+
+	return rp, nil
+
 }

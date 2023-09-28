@@ -255,6 +255,31 @@ func (s *SmartContract) AddEvent(ctx contractapi.TransactionContextInterface, ev
 	return nil
 }
 
+func (s *SmartContract) GetEvent(ctx contractapi.TransactionContextInterface, sensorID string) ([]Event, error) {
+	var transactions []Event
+	resultsIterator, err := ctx.GetStub().GetHistoryForKey(sensorID)
+	if err != nil {
+		return transactions, fmt.Errorf("GetTransactionHistory exec error: %v", err)
+	}
+	defer resultsIterator.Close()
+
+	for resultsIterator.HasNext() {
+		response, err := resultsIterator.Next()
+		if err != nil {
+			return transactions, fmt.Errorf("GetTransactionHistory iterator error: %v", err)
+		}
+
+		var transaction Event
+		if err := json.Unmarshal(response.Value, &transaction); err != nil {
+			return transactions, fmt.Errorf("GetTransactionHistory unmarshal error: %v", err)
+		}
+
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, nil
+}
+
 func (s *SmartContract) GetEventsBySensorAndTime(ctx contractapi.TransactionContextInterface, sensorID string, startTimestamp, endTimestamp string) ([]*Event, error) {
 	// Xây dựng khóa tìm kiếm bằng cách kết hợp 'sensorID' và khoảng thời gian 'startTimestamp' và 'endTimestamp'
 	startKey := fmt.Sprintf("%s-%s", sensorID, startTimestamp)

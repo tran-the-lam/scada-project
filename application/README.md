@@ -93,3 +93,5 @@ Các bước thực hiện:
     - [ ] Làm word latex
     - [ ] Làm slide latex
     - [ ] Quay video demo
+
+[Figma](https://www.figma.com/community/file/1289262608501295451)
