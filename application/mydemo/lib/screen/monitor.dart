@@ -87,17 +87,18 @@ class _MonitorList extends State<MonitorPage> {
     },
   ];
 
-  DateFormat formatter = DateFormat('yyyy/MM/dd HH:mm:ss');
+  DateFormat formatter = DateFormat('yyyy/MM/dd');
   DateTime selectedStartDate = DateTime.now();
   DateTime selectedEndDate = DateTime.now();
   List<SensorType> selectedSensorTypes = [];
 
-  // enum SensorType { temperature, humidity, light, soil }
-  // const _MonitorList({super.key, required this.items});
-
   @override
   Widget build(BuildContext context) {
     const title = 'Monitor';
+    List<String> options = ['Nhiệt độ', 'Độ ẩm'];
+    String selectedOption = options[0];
+    bool isPopupMenuVisible = true;
+
 
     return MaterialApp(
       title: title,
@@ -110,30 +111,13 @@ class _MonitorList extends State<MonitorPage> {
               color: Colors.deepPurple,
               offset: Offset(0, 50),
               itemBuilder: (BuildContext context) {
-                // return <PopupMenuEntry>[
-                //   PopupMenuItem(
-                //     child: IconButton(
-                //       icon: Icon(Icons.search),
-                //       onPressed: () {
-                //         // Thực hiện hành động khi người dùng nhấn vào icon tìm kiếm
-                //         Fluttertoast.showToast(
-                //             msg: "your message",
-                //             toastLength: Toast.LENGTH_SHORT,
-                //             gravity: ToastGravity.BOTTOM, // Also possible "TOP" and "CENTER"
-                //             backgroundColor: Color.fromRGBO(152, 54, 244, 1) ,
-                //             textColor: Colors.white,
-                //         );
-                //       },
-                //     ),
-                //   ),
-                // ];
                 return [
                   PopupMenuItem(
                     child: Container(
                       padding: EdgeInsets.all(10),
                       child: Column(
                         children: [
-                          Text('Giao diện',
+                          Text('Lọc theo ngày:',
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           SizedBox(height: 10),
                           Row(
@@ -154,7 +138,6 @@ class _MonitorList extends State<MonitorPage> {
                                       selectedStartDate = startDate;
                                     });
                                   }
-                                   
                                 },
                               ),
                             ],
@@ -181,24 +164,38 @@ class _MonitorList extends State<MonitorPage> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 40),
-                          Text('Chỉ số:',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          SizedBox(height: 10),
-                          CheckboxListTile(
-                            value: true,
-                            onChanged: (value) {},
-                            title: Text('Nhiệt độ'),
+                          SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Text('Chỉ số:', style: TextStyle(fontWeight: FontWeight.bold)),
+                              SizedBox(height: 10, width: 10),
+                              DropdownButton(
+                                value: selectedOption,
+                                items: options.map((String option) {
+                                  return DropdownMenuItem(
+                                    value: option,
+                                    child: Text(option),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    print(newValue);
+                                    selectedOption = newValue!;
+                                  });
+                                },
+                              ),
+                            ]
                           ),
-                          CheckboxListTile(
-                            value: false,
-                            onChanged: (value) {},
-                            title: Text('Độ ẩm'),
-                          ),
-                          CheckboxListTile(
-                            value: true,
-                            onChanged: (value) {},
-                            title: Text('Áp suất'),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () {
+                              // Xử lý khi button được nhấn
+                              setState(() {
+                                isPopupMenuVisible = false;
+                                Navigator.of(context).pop();
+                              });
+                            },
+                            child: Text('Tìm kiếm'),
                           ),
                         ],
                       ),
