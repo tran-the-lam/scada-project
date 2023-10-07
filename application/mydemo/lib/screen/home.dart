@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mydemo/screen/monitor.dart';
+import 'package:mydemo/screen/accounts.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.title});
@@ -16,10 +17,7 @@ class _BottomNavigationBarExampleState
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static const List<Widget> _widgetOptions = <Widget>[
     MonitorPage(title: "Monitor"),
-    Text(
-      'Index 1: Users',
-      style: optionStyle,
-    ),
+    AccountPage(title: "Accounts"),
     Text(
       'Index 2: Profile',
       style: optionStyle,

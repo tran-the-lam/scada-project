@@ -48,7 +48,9 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   fluttertoast: ^8.1.1
   intl: ^0.17.0
-  flutter_datetime_picker: ^1.5.1
+  flutter_datetime_picker:
+    git: 
+      url: https://github.com/HasanAlqaisi/flutter_datetime_picker.git
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

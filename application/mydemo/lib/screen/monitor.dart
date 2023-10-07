@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart' as fdp;
+
 
 
 enum SensorType { temperature, humidity, pressure }
@@ -87,121 +89,146 @@ class _MonitorList extends State<MonitorPage> {
     },
   ];
 
-  DateFormat formatter = DateFormat('yyyy/MM/dd');
-  DateTime selectedStartDate = DateTime.now();
-  DateTime selectedEndDate = DateTime.now();
-  List<SensorType> selectedSensorTypes = [];
+  DateTime _selectedStartDate = DateTime.now();
+  DateTime _selectedEndDate = DateTime.now();
+
+  List<String> options = ['Nhiệt độ', 'Độ ẩm'];
+  String _role = 'Nhiệt độ';
+
+
+  startDateTimePickerWidget(BuildContext context, Function setState) {
+    return fdp.DatePicker.showDateTimePicker(
+      context,
+      minTime: DateTime.now().subtract(Duration(days: 365)),
+      maxTime: DateTime.now(),
+      currentTime: _selectedStartDate,
+      locale: fdp.LocaleType.vi,
+      onConfirm: (DateTime dateTime) {
+        setState(() {
+          _selectedStartDate = dateTime;
+        });
+        print(_selectedStartDate);
+      },
+    );
+  }
+
+  endDateTimePickerWidget(BuildContext context, Function setState) {
+    return fdp.DatePicker.showDateTimePicker(
+      context,
+      minTime: DateTime.now().subtract(Duration(days: 365)),
+      maxTime: DateTime.now(),
+      currentTime: _selectedEndDate,
+      locale: fdp.LocaleType.vi,
+      onConfirm: (DateTime dateTime) {
+        setState(() {
+          _selectedEndDate = dateTime;
+        });
+        print(_selectedEndDate);
+      },
+    );
+  }
+
+  void showSearchPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Tìm kiếm dữ liệu', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Text('Ngày bắt đầu: ${DateFormat('dd-MM-yyyy HH:mm').format(_selectedStartDate)}', style: TextStyle(fontWeight: FontWeight.bold)),
+                        IconButton(
+                        icon: Icon(Icons.calendar_today),
+                        onPressed: () {
+                          startDateTimePickerWidget(context, setState);
+                        },
+                      ),
+                      ]
+                    ),
+                    Row(
+                      children: [
+                        Text('Ngày kết thúc: ${DateFormat('dd-MM-yyyy HH:mm').format(_selectedEndDate)}', style: TextStyle(fontWeight: FontWeight.bold)),
+                        IconButton(
+                        icon: Icon(Icons.calendar_today),
+                        onPressed: () {
+                          endDateTimePickerWidget(context, setState);
+                        },
+                      ),
+                      ]
+                    ),
+                    SizedBox(height: 10, width: 10),
+                    Row(
+                        children: [
+                          Text('Chỉ số:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(height: 10, width: 10),
+                          DropdownButton(
+                            value: _role,
+                            items: options.map((String option) {
+                              return DropdownMenuItem(
+                                value: option,
+                                child: Text(option),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                // print(newValue);
+                                _role = newValue!;
+                                // print('Role $_role');
+                              });
+                            },
+                          ),
+                      ]
+                    ),
+                ],
+              ), 
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Thực hiện hành động tìm kiếm ở đây
+                    // Ví dụ: gọi một API để tìm kiếm theo từ khóa
+                    // print('Mã nhân viên: $userID');
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Tìm kiếm'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Đóng popup khi nhấn nút Hủy
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Hủy'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     const title = 'Monitor';
     List<String> options = ['Nhiệt độ', 'Độ ẩm'];
     String selectedOption = options[0];
-    bool isPopupMenuVisible = true;
-
+    
 
     return MaterialApp(
       title: title,
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
           title: const Text(title),
           actions: [
-            PopupMenuButton(
-              color: Colors.deepPurple,
-              offset: Offset(0, 50),
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem(
-                    child: Container(
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        children: [
-                          Text('Lọc theo ngày:',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          SizedBox(height: 10),
-                          Row(
-                            children: [
-                              // Text('Ngày bắt đầu: '),
-                              Text(formatter.format(selectedStartDate)),
-                              IconButton(
-                                icon: Icon(Icons.calendar_today),
-                                onPressed: () async {
-                                 final startDate = await showDatePicker(
-                                    context: context,
-                                    initialDate: selectedStartDate,
-                                    firstDate: DateTime(2000),
-                                    lastDate: DateTime(2100),
-                                  );
-                                  if (startDate != null) {
-                                    setState(() {
-                                      selectedStartDate = startDate;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              // Text('Ngày kết thúc: '),
-                              Text(formatter.format(selectedEndDate)),
-                              IconButton(
-                                icon: Icon(Icons.calendar_today),
-                                onPressed: () async {
-                                  final endDate = await showDatePicker(
-                                    context: context,
-                                    initialDate: selectedEndDate,
-                                    firstDate: DateTime(2000),
-                                    lastDate: DateTime(2100),
-                                  );
-                                  if (endDate != null) {
-                                    setState(() {
-                                      selectedEndDate = endDate;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Text('Chỉ số:', style: TextStyle(fontWeight: FontWeight.bold)),
-                              SizedBox(height: 10, width: 10),
-                              DropdownButton(
-                                value: selectedOption,
-                                items: options.map((String option) {
-                                  return DropdownMenuItem(
-                                    value: option,
-                                    child: Text(option),
-                                  );
-                                }).toList(),
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    print(newValue);
-                                    selectedOption = newValue!;
-                                  });
-                                },
-                              ),
-                            ]
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              // Xử lý khi button được nhấn
-                              setState(() {
-                                isPopupMenuVisible = false;
-                                Navigator.of(context).pop();
-                              });
-                            },
-                            child: Text('Tìm kiếm'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ];
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                showSearchPopup(context);
               },
             ),
           ],
