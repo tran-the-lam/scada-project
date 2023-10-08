@@ -7,12 +7,17 @@ import (
 )
 
 func Route(app fiber.Router, service IService) {
-	api2 := app.Group("/login")
-	api2.Post("", LoginHdl(service))
+	loginApi := app.Group("/login")
+	loginApi.Post("", LoginHdl(service))
 
-	api := app.Group("/users", middleware.Auth)
-	api.Get("/state", GetStateHdl(service))
-	api.Post("", AddUserHdl(service))
+	userApi := app.Group("/users", middleware.Auth)
+	userApi.Get("/state", GetStateHdl(service))
+	userApi.Post("", AddUserHdl(service))
+	userApi.Put("/password", UpdatePwdHdl(service))
+	userApi.Get("/history/change-password", GetHistoryChangePasswordHdl(service))
+	userApi.Get("/history/login", GetHistoryLoginHdl(service))
 
-	// api.Put("/password", UpdatePwdHdl(service))
+	eventApi := app.Group("/events")
+	eventApi.Post("", AddEventHdl(service))
+	eventApi.Get("", GetEventHdl(service))
 }

@@ -48,6 +48,14 @@ func NotFound() ApiError {
 	}
 }
 
+func LoginFailed() ApiError {
+	return ApiError{
+		HttpCode: 401,
+		Code:     10005,
+		Message:  "User or password is incorrect",
+	}
+}
+
 func Forbidden() ApiError {
 	return ApiError{
 		HttpCode: 403,

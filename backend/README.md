@@ -1,5 +1,11 @@
 Phần này xây dựng API để tương tác với các hệ thống bên ngoài. Có 2 API được xây dựng là api cập nhật dữ liệu và api lấy nội dung theo key
 
+#### Clean data
+```
+cd ../../test-network
+./network.sh down
+```
+
 #### Cài đặt:
 
 Bước 1: Cài đặt Hyperledger Fabric
@@ -19,6 +25,19 @@ cd backend
 make run_api
 ```
 
+==> All step:
+```
+cd ../../test-network
+./network.sh down
+
+./network.sh up createChannel
+
+cd ../scada-project
+../test-network/network.sh deployCC -ccn basic -ccp $PWD/smart-contract/chaincode -ccl go
+
+cd backend
+make run_api
+```
 [Postman API Documenter](https://documenter.getpostman.com/view/6827911/2s9Xy3sBBT)
 
 #### Api cập nhật dữ liệu
