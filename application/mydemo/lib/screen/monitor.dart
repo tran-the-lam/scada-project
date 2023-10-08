@@ -3,10 +3,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart' as fdp;
 
-
-
-enum SensorType { temperature, humidity, pressure }
-
 class MonitorPage extends StatefulWidget {
   const MonitorPage({super.key, required this.title});
   final String title;
@@ -214,7 +210,6 @@ class _MonitorList extends State<MonitorPage> {
   Widget build(BuildContext context) {
     const title = 'Monitor';
     List<String> options = ['Nhiệt độ', 'Độ ẩm'];
-    String selectedOption = options[0];
     
 
     return MaterialApp(

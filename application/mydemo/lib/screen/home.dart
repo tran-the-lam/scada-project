@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:mydemo/screen/monitor.dart';
 import 'package:mydemo/screen/accounts.dart';
+import 'package:mydemo/screen/profile.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, required this.title});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key, required this.title});
   final String title;
 
   @override
-  State<ProfilePage> createState() => _BottomNavigationBarExampleState();
+  State<HomePage> createState() => _BottomNavigationBarExampleState();
 }
 
 class _BottomNavigationBarExampleState
-    extends State<ProfilePage> {
+    extends State<HomePage> {
   int _selectedIndex = 0;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static const List<Widget> _widgetOptions = <Widget>[
     MonitorPage(title: "Monitor"),
     AccountPage(title: "Accounts"),
-    Text(
-      'Index 2: Profile',
-      style: optionStyle,
-    ),
+    ProfilePage(title: "Profile"),
   ];
 
   void _onItemTapped(int index) {
