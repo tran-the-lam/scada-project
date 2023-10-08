@@ -153,10 +153,10 @@ func AddEventHdl(service IService) fiber.Handler {
 func GetEventHdl(service IService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
-		if err != nil {
-			return err
-		}
+		// if err != nil {
+		// 	return err
+		// }
 
-		return c.JSON(Response{"success", rs, ""})
+		return c.JSON(Response{"success", "", ""})
 	}
 }

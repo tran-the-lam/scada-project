@@ -220,19 +220,20 @@ func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key s
 
 func (s *service) AddEvent(ctx context.Context, event Event) error {
 	fmt.Println("AddEvent: %+v", event)
-	args := []interface{event.Event, event.SensorID, event.Parameter, event.Value, event.Threshold, event.Timestamp}
-	txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
-	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
-		return e.TxErr(err.Error())
-	}
+	// args := []interface{event.Event, event.SensorID, event.Parameter, event.Value, event.Threshold, event.Timestamp}
+	// txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
+	// if err != nil {
+	// 	fmt.Printf("Error creating txn proposal: %s", err)
+	// 	return e.TxErr(err.Error())
+	// }
 
-	return s.execTxn(txn_proposal)
+	// return s.execTxn(txn_proposal)
+	return nil
 }
 
 func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID string) ([]Event, error) {
 	var rp []Event
-	
+
 	args := []string{sensorID}
 	evaluateResponse, err := s.contract.EvaluateTransaction("GetEvent", args...)
 	if err != nil {
