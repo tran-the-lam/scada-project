@@ -41,8 +41,9 @@ TextEditingController _userIDController = TextEditingController();
       final password = _passwordController.text;
 
       // Gọi API để kiểm tra thông tin đăng nhập
-      final token = await http.login(userID, password, getDeviceInfo());
+      // final token = await http.login(userID, password, getDeviceInfo());
 
+      const token = "a";
       if (token.length > 0) {
         saveUserInfo(userID, token);
         Navigator.pushReplacementNamed(context, '/home');

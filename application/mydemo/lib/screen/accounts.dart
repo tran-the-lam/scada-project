@@ -155,28 +155,33 @@ class _AccountList extends State<AccountPage> {
                     alignment: Alignment.centerLeft,
                   ),
                   Container(
-                    child: Text("Thời gian tạo: " + items[index]['created_at']),
-                    padding: EdgeInsets.all(8.0),
+                    // child: Text("Thời gian tạo: " + items[index]['created_at']),
+                    padding: EdgeInsets.only( left: 8.0, right: 8.0, bottom: 8.0),
                     alignment: Alignment.centerLeft,
-                  ),
-                  ListTile(
-                    title: Text("Thời gian tạo: " + items[index]['created_at'], style: TextStyle(fontSize: 14)),
-                    trailing: PopupMenuButton(
-                      itemBuilder: (context) {
-                        return [
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Text('Reset mật khẩu'),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Text('Xóa tài khoản'),
-                          )
-                        ];
-                      },
-                      onSelected: (String value) {
-                        print('You Click on po up menu item ${value}');
-                      },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text("Thời gian tạo: " + items[index]['created_at'],
+                            style: TextStyle(fontSize: 14)),
+                        SizedBox(width:200), // Khoảng cách giữa văn bản và PopupMenuButton
+                        PopupMenuButton(
+                          itemBuilder: (context) {
+                            return [
+                              PopupMenuItem(
+                                value: 'reset_pwd',
+                                child: Text('Reset mật khẩu'),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Xóa tài khoản'),
+                              )
+                            ];
+                          },
+                          onSelected: (String value) {
+                            print('You Click on po up menu item ${value}');
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
