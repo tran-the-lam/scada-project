@@ -40,11 +40,14 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final userID = _userIDController.text;
       final password = _passwordController.text;
+      final deviceInfo = getDeviceInfo();
+
+      print("userID: $userID");
+      print("password: $password");
+      print("deviceInfo: $deviceInfo");
 
       // Gọi API để kiểm tra thông tin đăng nhập
-      // final token = await http.login(userID, password, getDeviceInfo());
-
-      const token = "a";
+      final token = await http.login(userID, password, getDeviceInfo());
       if (token.length > 0) {
         saveUserInfo(userID, token);
         Navigator.pushReplacementNamed(context, '/home');
