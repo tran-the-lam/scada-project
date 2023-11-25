@@ -150,13 +150,29 @@ func AddEventHdl(service IService) fiber.Handler {
 	}
 }
 
+type GetEventQuery struct {
+	LastTime  uint64 `query:"last_time"`
+	PageSize  uint32 `query:"page_size"`
+	Parameter uint8  `query:"sensor_parameter"`
+	SensorID  string `query:"sensor_id"`
+}
+
 func GetEventHdl(service IService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
-		// if err != nil {
-		// 	return err
-		// }
+		var query GetEventQuery
+		if err := c.QueryParser(&query); err != nil {
+			return e.BadRequest(err.Error())
+		}
 
-		return c.JSON(Response{"success", "", ""})
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+
+		events, err := service.GetEvent(c.Context(), actorID, actorRole, query.SensorID, query.PageSize, query.Parameter, query.LastTime)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", events, ""})
 	}
 }

@@ -17,7 +17,7 @@ func Route(app fiber.Router, service IService) {
 	userApi.Get("/history/change-password", GetHistoryChangePasswordHdl(service))
 	userApi.Get("/history/login", GetHistoryLoginHdl(service))
 
-	eventApi := app.Group("/events")
+	eventApi := app.Group("/events", middleware.Auth)
 	eventApi.Post("", AddEventHdl(service))
 	eventApi.Get("", GetEventHdl(service))
 }

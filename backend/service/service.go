@@ -24,7 +24,7 @@ type IService interface {
 	GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error)
 	GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error)
 	AddEvent(ctx context.Context, event Event) error
-	GetEvent(ctx context.Context, actorID, actorRole, sensorID string) ([]Event, error)
+	GetEvent(ctx context.Context, actorID, actorRole, sensorID string, pageSize uint32, parameter uint8, lastTime uint64) ([]Event, error)
 }
 
 type service struct {
@@ -220,23 +220,24 @@ func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key s
 
 func (s *service) AddEvent(ctx context.Context, event Event) error {
 	fmt.Println("AddEvent: %+v", event)
-	// args := []interface{event.Event, event.SensorID, event.Parameter, event.Value, event.Threshold, event.Timestamp}
-	// txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
-	// if err != nil {
-	// 	fmt.Printf("Error creating txn proposal: %s", err)
-	// 	return e.TxErr(err.Error())
-	// }
+	args := []string{event.EventName, event.SensorID, event.Parameter, fmt.Sprintf("%f", event.Value), fmt.Sprintf("%f", event.Threshold), fmt.Sprintf("%d", event.Timestamp)}
+	txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
+	if err != nil {
+		fmt.Printf("Error creating txn proposal: %s", err)
+		return e.TxErr(err.Error())
+	}
 
-	// return s.execTxn(txn_proposal)
-	return nil
+	return s.execTxn(txn_proposal)
 }
 
-func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID string) ([]Event, error) {
+func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID string, pageSize uint32, parameter uint8, lastTime uint64) ([]Event, error) {
 	var rp []Event
 
+	fmt.Println("GetEvent", actorID, actorRole, sensorID, pageSize, parameter, lastTime)
 	args := []string{sensorID}
 	evaluateResponse, err := s.contract.EvaluateTransaction("GetEvent", args...)
 	if err != nil {
+		fmt.Printf("Error: %s", err)
 		return rp, err
 	}
 

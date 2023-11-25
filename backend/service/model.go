@@ -14,7 +14,7 @@ type User struct {
 }
 
 type Event struct {
-	Event     string  `json:"event"`
+	EventName string  `json:"event"`
 	SensorID  string  `json:"sensor_id"`
 	Parameter string  `json:"parameter"`
 	Value     float64 `json:"value"`
