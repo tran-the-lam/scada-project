@@ -91,6 +91,7 @@ class _MonitorList extends State<MonitorPage> {
   List<String> options = ['Nhiệt độ', 'Độ ẩm'];
   String _role = 'Nhiệt độ';
 
+  TextEditingController _sensorIDController = TextEditingController();
 
   startDateTimePickerWidget(BuildContext context, Function setState) {
     return fdp.DatePicker.showDateTimePicker(
@@ -134,28 +135,29 @@ class _MonitorList extends State<MonitorPage> {
               content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        Text('Ngày bắt đầu: ${DateFormat('dd-MM-yyyy HH:mm').format(_selectedStartDate)}', style: TextStyle(fontWeight: FontWeight.bold)),
-                        IconButton(
-                        icon: Icon(Icons.calendar_today),
-                        onPressed: () {
-                          startDateTimePickerWidget(context, setState);
-                        },
-                      ),
-                      ]
-                    ),
-                    Row(
-                      children: [
-                        Text('Ngày kết thúc: ${DateFormat('dd-MM-yyyy HH:mm').format(_selectedEndDate)}', style: TextStyle(fontWeight: FontWeight.bold)),
-                        IconButton(
-                        icon: Icon(Icons.calendar_today),
-                        onPressed: () {
-                          endDateTimePickerWidget(context, setState);
-                        },
-                      ),
-                      ]
-                    ),
+                    // Row(
+                    //   children: [
+                    //     Text('Ngày bắt đầu: ${DateFormat('dd-MM-yyyy HH:mm').format(_selectedStartDate)}', style: TextStyle(fontWeight: FontWeight.bold)),
+                    //     IconButton(
+                    //     icon: Icon(Icons.calendar_today),
+                    //     onPressed: () {
+                    //       startDateTimePickerWidget(context, setState);
+                    //     },
+                    //   ),
+                    //   ]
+                    // ),
+                    // Row(
+                    //   children: [
+                    //     Text('Ngày kết thúc: ${DateFormat('dd-MM-yyyy HH:mm').format(_selectedEndDate)}', style: TextStyle(fontWeight: FontWeight.bold)),
+                    //     IconButton(
+                    //     icon: Icon(Icons.calendar_today),
+                    //     onPressed: () {
+                    //       endDateTimePickerWidget(context, setState);
+                    //     },
+                    //   ),
+                    //   ]
+                    // ),
+                    
                     SizedBox(height: 10, width: 10),
                     Row(
                         children: [
@@ -177,6 +179,17 @@ class _MonitorList extends State<MonitorPage> {
                               });
                             },
                           ),
+                      ]
+                    ),
+                    SizedBox(height: 10, width: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _sensorIDController,
+                            decoration: InputDecoration(hintText: "Nhập mã cảm biến"),
+                          ),
+                        ),
                       ]
                     ),
                 ],

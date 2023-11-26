@@ -97,3 +97,10 @@ go test -cover ./...
 ok      backend/pkg/utils       0.290s  coverage: 100.0% of statements
 ok      backend/service (cached)        coverage: 76.6% of statements
 ```
+
+TODO
+Chuẩn bị API để ghép vào giao diện (thứ 3 phải xong)
+- API get all event, save key allEvent => Call function API get history by Key
+- API search => save key sensor_id, parameter => Call function get history by Key
+- API update my password
+- ADD user, remove_user, reset password
