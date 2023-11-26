@@ -151,10 +151,8 @@ func AddEventHdl(service IService) fiber.Handler {
 }
 
 type GetEventQuery struct {
-	LastTime  uint64 `query:"last_time"`
-	PageSize  uint32 `query:"page_size"`
-	Parameter uint8  `query:"sensor_parameter"`
-	SensorID  string `query:"sensor_id"`
+	PageSize uint32 `query:"page_size"`
+	Bookmark string `query:"bookmark"`
 }
 
 func GetEventHdl(service IService) fiber.Handler {
@@ -168,7 +166,7 @@ func GetEventHdl(service IService) fiber.Handler {
 		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
 		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
 
-		events, err := service.GetEvent(c.Context(), actorID, actorRole, query.SensorID, query.PageSize, query.Parameter, query.LastTime)
+		events, _, err := service.GetEvent(c.Context(), actorID, actorRole, query.PageSize, query.Bookmark)
 		if err != nil {
 			return err
 		}

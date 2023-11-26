@@ -24,7 +24,8 @@ type IService interface {
 	GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error)
 	GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error)
 	AddEvent(ctx context.Context, event Event) error
-	GetEvent(ctx context.Context, actorID, actorRole, sensorID string, pageSize uint32, parameter uint8, lastTime uint64) ([]Event, error)
+	GetEvent(ctx context.Context, actorID, actorRole string, pageSize uint32, bookmark string) ([]Event, string, error)
+	// TODO API Search event by sensorID, parameter, startTime, endTime
 }
 
 type service struct {
@@ -57,17 +58,17 @@ func (s *service) hashPassword(pwd string) string {
 func (s *service) execTxn(txn *client.Proposal) error {
 	txn_endorsed, err := txn.Endorse()
 	if err != nil {
-		fmt.Printf("Error endorsing txn: %s", err)
+		fmt.Printf("Error endorsing txn: %+v", err)
 		return e.TxErr(err.Error())
 	}
 
 	txn_committed, err := txn_endorsed.Submit()
 	if err != nil {
-		fmt.Printf("Error submitting transaction: %s", err)
+		fmt.Printf("Error submitting transaction: %+v", err)
 		return e.TxErr(err.Error())
 	}
 
-	fmt.Printf("Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result())
+	fmt.Printf("Transaction ID : %s Response: %s \n", txn_committed.TransactionID(), txn_endorsed.Result())
 
 	return nil
 }
@@ -223,29 +224,38 @@ func (s *service) AddEvent(ctx context.Context, event Event) error {
 	args := []string{event.EventName, event.SensorID, event.Parameter, fmt.Sprintf("%f", event.Value), fmt.Sprintf("%f", event.Threshold), fmt.Sprintf("%d", event.Timestamp)}
 	txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
+		fmt.Printf("Error creating txn proposal: %", err)
 		return e.TxErr(err.Error())
 	}
 
 	return s.execTxn(txn_proposal)
 }
 
-func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID string, pageSize uint32, parameter uint8, lastTime uint64) ([]Event, error) {
-	var rp []Event
-
-	fmt.Println("GetEvent", actorID, actorRole, sensorID, pageSize, parameter, lastTime)
-	args := []string{sensorID}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetEvent", args...)
-	if err != nil {
-		fmt.Printf("Error: %s", err)
-		return rp, err
+func (s *service) GetEvent(ctx context.Context, actorID, actorRole string, pageSize uint32, bookmark string) ([]Event, string, error) {
+	// var rp []Event
+	var rp struct {
+		Events   []Event
+		Bookmark string
 	}
+	fmt.Println("GetEvent", actorID, actorRole, pageSize)
+	// args := []string{sensorID, fmt.Sprintf("%d", startTime), fmt.Sprintf("%d", endTime)}
+	args := []string{fmt.Sprintf("%d", pageSize), bookmark}
+	evaluateResponse, err := s.contract.EvaluateTransaction("GetEventWithPagination", args...)
+	fmt.Print("GetEvent Query Response: %s\n")
+	if err != nil {
+		fmt.Printf("Error: %+v", err)
+		return rp.Events, "", err
+	}
+
+	fmt.Print("GetEvent Query Response: %s\n", evaluateResponse)
 
 	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
 	if err != nil {
 		panic(err)
 	}
 
-	return rp, nil
+	fmt.Println("GetEvent", rp.Events, rp.Bookmark)
+
+	return rp.Events, rp.Bookmark, nil
 
 }
