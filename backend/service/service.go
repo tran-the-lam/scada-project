@@ -20,11 +20,15 @@ type IService interface {
 	GetState(ctx context.Context, actorID, actorRole, key string) (string, error)
 	UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error
 	Login(ctx context.Context, userID, ip, userAgent, deviceID, password string) (string, error)
-	AddUser(ctx context.Context, actorID, actorRole, userID, pwd, role string) error
+	AddUser(ctx context.Context, actorID, actorRole, userID, role string) error
+	GetUsers(ctx context.Context, actorID, actorRole string) ([]User, error)
 	GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error)
 	GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error)
 	AddEvent(ctx context.Context, event Event) error
-	GetEvent(ctx context.Context, actorID, actorRole, sensorID string, pageSize uint32, parameter uint8, lastTime uint64) ([]Event, error)
+	GetEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error)
+	SearchEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error)
+	ResetPassword(ctx context.Context, actorID, actorRole, userID string) error
+	DeleteUser(ctx context.Context, actorID, actorRole, userID string) error
 }
 
 type service struct {
@@ -33,6 +37,8 @@ type service struct {
 	contract client.Contract
 	saltPwd  string
 }
+
+var DEFAULT_PWD = "12345678"
 
 func NewService(cfg *config.OrgSetup) IService {
 	fmt.Printf("Init service %s = %s = %s \n", cfg.ChannelID, cfg.ChainCodeID, cfg.SaltPwd)
@@ -150,13 +156,19 @@ func (s *service) Login(ctx context.Context, userID, ip, userAgent, deviceID, pa
 	return t, nil
 }
 
-func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, pwd, role string) error {
-	fmt.Println("AddUser", actorID, actorRole, userID, pwd, role)
+func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, role string) error {
+	fmt.Println("AddUser", actorID, actorRole, userID, role)
 	if actorRole != "admin" {
 		return e.Forbidden()
 	}
 
-	args := []string{actorID, userID, role, s.hashPassword(pwd)}
+	if role != "manager" && role != "employee" {
+		return e.BadRequest("role must be manager or employee")
+	}
+
+	hasPwd := s.hashPassword(DEFAULT_PWD)
+	fmt.Println("AddUser", actorID, actorRole, userID, role, hasPwd)
+	args := []string{actorID, userID, role, s.hashPassword(DEFAULT_PWD)}
 	txn_proposal, err := s.contract.NewProposal("AddUser", client.WithArguments(args...))
 	if err != nil {
 		fmt.Printf("Error creating txn proposal: %s", err)
@@ -230,12 +242,12 @@ func (s *service) AddEvent(ctx context.Context, event Event) error {
 	return s.execTxn(txn_proposal)
 }
 
-func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID string, pageSize uint32, parameter uint8, lastTime uint64) ([]Event, error) {
+func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
 	var rp []Event
 
-	fmt.Println("GetEvent", actorID, actorRole, sensorID, pageSize, parameter, lastTime)
+	fmt.Println("GetEvent", actorID, actorRole, sensorID, parameter)
 	args := []string{sensorID}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetEvent", args...)
+	evaluateResponse, err := s.contract.EvaluateTransaction("GetAllEvents", args...)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return rp, err
@@ -247,5 +259,89 @@ func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID str
 	}
 
 	return rp, nil
+}
 
+func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
+	var rp []Event
+
+	fmt.Println("SearchEvent", actorID, actorRole, sensorID, parameter)
+	if sensorID == "" && parameter == "" {
+		return nil, e.BadRequest("sensorID or parameter must be not empty")
+	}
+
+	key := sensorID
+	isSensor := 1
+	if len(parameter) > 0 {
+		key = parameter
+		isSensor = 0
+	}
+
+	args := []string{key, fmt.Sprintf("%d", isSensor)}
+	evaluateResponse, err := s.contract.EvaluateTransaction("GetEventsByKey", args...)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return rp, err
+	}
+
+	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
+	if err != nil {
+		panic(err)
+	}
+
+	return rp, nil
+}
+
+func (s *service) ResetPassword(ctx context.Context, actorID, actorRole, userID string) error {
+	fmt.Println("ResetPassword", actorID, actorRole, userID)
+	if actorRole != "admin" {
+		return e.Forbidden()
+	}
+
+	args := []string{actorID, userID, s.hashPassword(DEFAULT_PWD)}
+	txn_proposal, err := s.contract.NewProposal("ResetPassword", client.WithArguments(args...))
+	if err != nil {
+		fmt.Printf("Error creating txn proposal: %s", err)
+		return e.TxErr(err.Error())
+	}
+
+	return s.execTxn(txn_proposal)
+}
+
+func (s *service) DeleteUser(ctx context.Context, actorID, actorRole, userID string) error {
+	fmt.Println("DeleteUser", actorID, actorRole, userID)
+	if actorRole != "admin" {
+		return e.Forbidden()
+	}
+
+	args := []string{actorID, userID}
+	txn_proposal, err := s.contract.NewProposal("DeleteUser", client.WithArguments(args...))
+	if err != nil {
+		fmt.Printf("Error creating txn proposal: %s", err)
+		return e.TxErr(err.Error())
+	}
+
+	return s.execTxn(txn_proposal)
+}
+
+func (s *service) GetUsers(ctx context.Context, actorID, actorRole string) ([]User, error) {
+	var rp []User
+
+	fmt.Println("GetUsers", actorID, actorRole)
+	if actorRole != "admin" {
+		return rp, e.Forbidden()
+	}
+
+	args := []string{}
+	evaluateResponse, err := s.contract.EvaluateTransaction("GetAllUsers", args...)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return rp, err
+	}
+
+	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
+	if err != nil {
+		panic(err)
+	}
+
+	return rp, nil
 }

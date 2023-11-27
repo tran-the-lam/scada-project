@@ -100,7 +100,23 @@ ok      backend/service (cached)        coverage: 76.6% of statements
 
 TODO
 Chuẩn bị API để ghép vào giao diện (thứ 3 phải xong)
-- API get all event, save key allEvent => Call function API get history by Key
-- API search => save key sensor_id, parameter => Call function get history by Key
-- API update my password
-- ADD user, remove_user, reset password
+[x] API get all event, save key allEvent => Call function API get history by Key
+[x] API search => save key sensor_id, parameter => Call function get history by Key
+[x] API update my password
+[x] ADD user, 
+remove_user,
+[x] reset password
+
+Chức năng chung:
+- Xem lại các chỉ số giám sát được gửi từ cảm biến
+- Màn profile
+Chức năng admin:
+- Thêm, xóa user, reset mật khẩu cho user
+
+
+Tạo script để tạo dữ liệu mẫu
+
+Luận văn sẽ nói về những vấn đề gì
++) 
++) Những phần mà ứng dụng có thể cải tiến, như là kết hợp với 1 vài cơ sở dữ liệu nữa để làm nhiệm vụ search, ...
++) Có thể xóa những dữ liệu không dùng bằng phương thức DelState => nhưng trước tiên cần lưu chúng ở một nơi nào đó an toàn

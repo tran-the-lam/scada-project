@@ -62,10 +62,22 @@ func GetStateHdl(service IService) fiber.Handler {
 	}
 }
 
+func GetAllUserHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+		rs, err := service.GetUsers(c.Context(), actorID, actorRole)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", rs, ""})
+	}
+}
+
 type AddUserBody struct {
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`
-	Pwd    string `json:"password"`
 }
 
 func AddUserHdl(service IService) fiber.Handler {
@@ -77,12 +89,12 @@ func AddUserHdl(service IService) fiber.Handler {
 
 		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
 		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
-		err := service.AddUser(c.Context(), actorID, actorRole, body.UserID, body.Pwd, body.Role)
+		err := service.AddUser(c.Context(), actorID, actorRole, body.UserID, body.Role)
 		if err != nil {
 			return err
 		}
 
-		return c.JSON(Response{"success", "", ""})
+		return c.JSON(Response{"success", nil, ""})
 	}
 }
 
@@ -151,9 +163,7 @@ func AddEventHdl(service IService) fiber.Handler {
 }
 
 type GetEventQuery struct {
-	LastTime  uint64 `query:"last_time"`
-	PageSize  uint32 `query:"page_size"`
-	Parameter uint8  `query:"sensor_parameter"`
+	Parameter string `query:"sensor_parameter"`
 	SensorID  string `query:"sensor_id"`
 }
 
@@ -168,11 +178,67 @@ func GetEventHdl(service IService) fiber.Handler {
 		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
 		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
 
-		events, err := service.GetEvent(c.Context(), actorID, actorRole, query.SensorID, query.PageSize, query.Parameter, query.LastTime)
+		events, err := service.GetEvent(c.Context(), actorID, actorRole, query.SensorID, query.Parameter)
 		if err != nil {
 			return err
 		}
 
 		return c.JSON(Response{"success", events, ""})
+	}
+}
+
+func SearchEventHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var query GetEventQuery
+		if err := c.QueryParser(&query); err != nil {
+			return e.BadRequest(err.Error())
+		}
+
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+
+		events, err := service.SearchEvent(c.Context(), actorID, actorRole, query.SensorID, query.Parameter)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", events, ""})
+	}
+}
+
+type UserParams struct {
+	UserID string `params:"user_id"`
+}
+
+func ResetPwdHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var params UserParams
+		if err := c.ParamsParser(&params); err != nil {
+			return e.BadRequest(err.Error())
+		}
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+		err := service.ResetPassword(c.Context(), actorID, actorRole, params.UserID)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(Response{"success", "", ""})
+	}
+}
+
+func DeleteUserHdl(service IService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var params UserParams
+		if err := c.ParamsParser(&params); err != nil {
+			return e.BadRequest(err.Error())
+		}
+		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
+		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
+		err := service.DeleteUser(c.Context(), actorID, actorRole, params.UserID)
+		if err != nil {
+			return err
+		}
+		return c.JSON(Response{"success", "", ""})
 	}
 }
