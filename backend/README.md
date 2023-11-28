@@ -111,7 +111,7 @@ Chức năng chung:
 - Xem lại các chỉ số giám sát được gửi từ cảm biến
 - Màn profile
 Chức năng admin:
-- Thêm, xóa user, reset mật khẩu cho user
+- Thêm, reset mật khẩu cho user, tạm thời bỏ chức năng xóa user hoặc là có thể làm lưu danh sách xóa vào 1 key rồi tiến hành merge 2 mảng từ 'allUser' và 'deleteUser' => Cần nghĩ thêm
 
 
 Tạo script để tạo dữ liệu mẫu
