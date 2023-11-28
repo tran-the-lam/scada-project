@@ -29,7 +29,9 @@ func sendReq(url, payload, token string) {
 	// Set headers if needed
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-scada-api-key", "scada-api-key")
-	req.Header.Set("Authorization", "Bearer "+token)
+	if len(token) > 0 {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 
 	// Create an HTTP client
 	client := &http.Client{}
@@ -88,6 +90,6 @@ func gen20user() {
 }
 
 func main() {
-	// gen50event()
-	gen20user()
+	gen50event()
+	// gen20user()
 }

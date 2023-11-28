@@ -36,7 +36,7 @@ func LoginHdl(service IService) fiber.Handler {
 			return err
 		}
 
-		return c.JSON(Response{"success", "", token})
+		return c.JSON(Response{"success", nil, token})
 	}
 }
 
@@ -116,7 +116,7 @@ func UpdatePwdHdl(service IService) fiber.Handler {
 			return err
 		}
 
-		return c.JSON(Response{"success", "", ""})
+		return c.JSON(Response{"success", nil, ""})
 	}
 }
 
@@ -163,7 +163,7 @@ func AddEventHdl(service IService) fiber.Handler {
 }
 
 type GetEventQuery struct {
-	Parameter string `query:"sensor_parameter"`
+	Parameter string `query:"parameter"`
 	SensorID  string `query:"sensor_id"`
 }
 
@@ -223,7 +223,7 @@ func ResetPwdHdl(service IService) fiber.Handler {
 			return err
 		}
 
-		return c.JSON(Response{"success", "", ""})
+		return c.JSON(Response{"success", nil, ""})
 	}
 }
 
@@ -239,6 +239,6 @@ func DeleteUserHdl(service IService) fiber.Handler {
 		if err != nil {
 			return err
 		}
-		return c.JSON(Response{"success", "", ""})
+		return c.JSON(Response{"success", nil, ""})
 	}
 }
