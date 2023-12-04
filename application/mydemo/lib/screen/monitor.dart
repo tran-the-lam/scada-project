@@ -274,6 +274,7 @@ class _MonitorList extends State<MonitorPage> {
                   );
                 } else {
                   return ListView.builder(
+                    itemCount: snapshot.data.length,
                     itemBuilder: (context, index) {
                       final item = snapshot.data[index];
                       // print(snapshot.data[index]);

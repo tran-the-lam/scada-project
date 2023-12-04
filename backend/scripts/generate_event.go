@@ -90,6 +90,6 @@ func gen20user() {
 }
 
 func main() {
-	// gen50event()
-	gen20user()
+	gen50event()
+	// gen20user()
 }
