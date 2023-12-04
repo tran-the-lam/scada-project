@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart' as fdp;
+import 'package:mydemo/utils/http.dart' as http;
 
 class MonitorPage extends StatefulWidget {
   const MonitorPage({super.key, required this.title});
@@ -12,87 +13,93 @@ class MonitorPage extends StatefulWidget {
 }
 
 class _MonitorList extends State<MonitorPage> {
-  final List<Map<String, dynamic>> items = [
-    {
-      'sensor_id': 'S01',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': '2023-10-10 10:10:10'
-    },
-    {
-      'sensor_id': 'S02',
-      'parameter': 'Độ ẩm',
-      'value': 20,
-      'threshold': 15,
-      'created_at': "2023-10-08 09:10:10"
-    },
-    {
-      'sensor_id': 'S03',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 08:10:10"
-    },
-    {
-      'sensor_id': 'S04',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 07:10:10"
-    },
-    {
-      'sensor_id': 'S05',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 06:10:10"
-    },
-    {
-      'sensor_id': 'S06',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 05:10:10"
-    },
-    {
-      'sensor_id': 'S07',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 04:10:10"
-    },
-    {
-      'sensor_id': 'S08',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 03:10:10"
-    },
-    {
-      'sensor_id': 'S09',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 02:10:10"
-    },
-    {
-      'sensor_id': 'S10',
-      'parameter': 'Nhiệt độ',
-      'value': 50,
-      'threshold': 40,
-      'created_at': "2023-10-08 01:10:10"
-    },
+  final List<http.Event> items = [
+    // {
+    //   'sensor_id': 'S01',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': '2023-10-10 10:10:10'
+    // },
+    // {
+    //   'sensor_id': 'S02',
+    //   'parameter': 'Độ ẩm',
+    //   'value': 20,
+    //   'threshold': 15,
+    //   'created_at': "2023-10-08 09:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S03',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 08:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S04',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 07:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S05',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 06:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S06',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 05:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S07',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 04:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S08',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 03:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S09',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 02:10:10"
+    // },
+    // {
+    //   'sensor_id': 'S10',
+    //   'parameter': 'Nhiệt độ',
+    //   'value': 50,
+    //   'threshold': 40,
+    //   'created_at': "2023-10-08 01:10:10"
+    // },
   ];
 
   DateTime _selectedStartDate = DateTime.now();
   DateTime _selectedEndDate = DateTime.now();
 
   List<String> options = ['Nhiệt độ', 'Độ ẩm'];
-  String _role = 'Nhiệt độ';
+  String _parameter = 'Nhiệt độ';
 
   TextEditingController _sensorIDController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    // fetchEvent();
+  }
+  
   startDateTimePickerWidget(BuildContext context, Function setState) {
     return fdp.DatePicker.showDateTimePicker(
       context,
@@ -164,7 +171,7 @@ class _MonitorList extends State<MonitorPage> {
                           Text('Chỉ số:', style: TextStyle(fontWeight: FontWeight.bold)),
                           SizedBox(height: 10, width: 10),
                           DropdownButton(
-                            value: _role,
+                            value: _parameter,
                             items: options.map((String option) {
                               return DropdownMenuItem(
                                 value: option,
@@ -174,8 +181,8 @@ class _MonitorList extends State<MonitorPage> {
                             onChanged: (String? newValue) {
                               setState(() {
                                 // print(newValue);
-                                _role = newValue!;
-                                // print('Role $_role');
+                                _parameter = newValue!;
+                                // print('Role $_parameter');
                               });
                             },
                           ),
@@ -219,6 +226,13 @@ class _MonitorList extends State<MonitorPage> {
     );
   }
 
+  // void fetchEvent() async {
+  //   final events = await http.getAllEvent();
+  //   setState(() {
+  //     items.clear();
+  //     items.addAll(events);
+  //   });
+  // }
   @override
   Widget build(BuildContext context) {
     const title = 'Monitor';
@@ -241,42 +255,65 @@ class _MonitorList extends State<MonitorPage> {
             ),
           ],
         ),
-        body: ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            return Card(
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8.0),
-                    alignment: Alignment.centerLeft,
-                    child: Text("Mã cảm biến: " + items[index]['sensor_id']),
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text("Chỉ số: " + items[index]['parameter']),
-                    alignment: Alignment.centerLeft,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text("Giá trị: " + items[index]['value'].toString()),
-                    alignment: Alignment.centerLeft,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text("Ngưỡng: " + items[index]['threshold'].toString()),
-                    alignment: Alignment.centerLeft,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text("Thời gian: " + items[index]['created_at']),
-                    alignment: Alignment.centerLeft,
-                  ),
-                ],
-              ),
-            );
-          },
+        body: Container(
+          padding: EdgeInsets.all(16.0),
+          child: FutureBuilder(
+            future: http.getAllEvent(),
+            builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text('Error: ${snapshot.error}'),
+                  );
+                } else if (!snapshot.hasData) {
+                  return Center(
+                    child: Text('No data available'),
+                  );
+                } else {
+                  return ListView.builder(
+                    itemBuilder: (context, index) {
+                      final item = snapshot.data[index];
+                      // print(snapshot.data[index]);
+                      return Card(
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8.0),
+                              alignment: Alignment.centerLeft,
+                              child: Text("Mã cảm biến: " + item.sensorId),
+                            ),
+                            Container(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text("Chỉ số: " + item.parameter),
+                              alignment: Alignment.centerLeft,
+                            ),
+                            Container(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text("Giá trị: " + item.value.toString()),
+                              alignment: Alignment.centerLeft,
+                            ),
+                            Container(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text("Ngưỡng: " + item.threshold.toString()),
+                              alignment: Alignment.centerLeft,
+                            ),
+                            Container(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text("Thời gian: " + item.createdAt),
+                              alignment: Alignment.centerLeft,
+                            ),
+                          ],
+                        ),
+                      );
+                  },
+                  ); 
+                }
+              },
         ),
+      ),
       ),
     );
   }

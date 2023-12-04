@@ -16,11 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   String _userID = '';
   String _password = '';
 
-  void saveUserInfo(String userId, String token) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('userId', userId);
-    prefs.setString('token', token);
-  }
+
 
   String getDeviceInfo() {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -49,7 +45,6 @@ class _LoginPageState extends State<LoginPage> {
       // Gọi API để kiểm tra thông tin đăng nhập
       final token = await http.login(userID, password, getDeviceInfo());
       if (token.length > 0) {
-        saveUserInfo(userID, token);
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         showDialog(
