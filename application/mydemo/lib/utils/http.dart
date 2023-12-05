@@ -89,8 +89,6 @@ Future<List<Event>> searchEvent(String sensorID) async {
     "Access-Control-Allow-Origin": "*",
   };
 
-  print("url: $url \nheaders: $requestHeaders");
-
   final response = await http.get(Uri.parse(url), headers: requestHeaders);
   var responseData = json.decode(response.body)["data"];
 
@@ -109,6 +107,62 @@ Future<List<Event>> searchEvent(String sensorID) async {
   }
 
   return events;
+}
+
+
+class User {
+  final String userID;
+  final String role;
+  final int status;
+
+  User({
+    required this.userID,
+    required this.role,
+    required this.status,
+  });
+}
+
+Future<List<User>> getAllUser() async {
+  String url = "${Constant.BASE_URL}/users";
+  final token = await utils.getToken();
+  Map<String, String> requestHeaders = {
+    'Authorization': 'Bearer $token',
+    'Accept': '*/*',
+    "Access-Control-Allow-Origin": "*",
+  };
+
+  final response = await http.get(Uri.parse(url), headers: requestHeaders);
+  var responseData = json.decode(response.body)["data"];
+
+  List<User> users = [];
+  for (var item in responseData) {
+    User u = User(
+      userID: item['user_id'],
+      role: item['role'],
+      status: item['status'],
+    );
+    users.add(u);
+  }
+
+  return users;
+} 
+
+Future<String> addUser(String userID, String role) async {
+  String url = "${Constant.BASE_URL}/users";
+  final token = await utils.getToken();
+  Map<String, String> requestHeaders = {
+    'Authorization': 'Bearer $token',
+    'Accept': '*/*',
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json",
+  };
+
+  print("Add user url: $url \nheaders: $requestHeaders");
+  var body = json.encode({"user_id": userID, "role": role});
+
+  final response = await http.post(Uri.parse(url), headers: requestHeaders, body: body);
+  var responseData = json.decode(response.body)["message"];
+  return responseData;
 }
 
 Future<void> sendDataToApi() async {
