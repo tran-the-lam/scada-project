@@ -77,7 +77,36 @@ Future<List<Event>> getAllEvent() async {
     events.add(event);
   }
 
-  print("Events: $events");
+  return events;
+}
+
+Future<List<Event>> searchEvent(String sensorID) async {
+  String url = "${Constant.BASE_URL}/events/search?sensor_id=$sensorID";
+  final token = await utils.getToken();
+  Map<String, String> requestHeaders = {
+    'Authorization': 'Bearer $token',
+    'Accept': '*/*',
+    "Access-Control-Allow-Origin": "*",
+  };
+
+  print("url: $url \nheaders: $requestHeaders");
+
+  final response = await http.get(Uri.parse(url), headers: requestHeaders);
+  var responseData = json.decode(response.body)["data"];
+
+  List<Event> events = [];
+  for (var item in responseData) {
+    final dateTime =
+        DateTime.fromMillisecondsSinceEpoch(item['timestamp'], isUtc: true);
+    Event event = Event(
+      sensorId: item['sensor_id'],
+      parameter: item['parameter'],
+      value: item['value'],
+      threshold: item['threshold'],
+      createdAt: dateTime.toIso8601String(),
+    );
+    events.add(event);
+  }
 
   return events;
 }

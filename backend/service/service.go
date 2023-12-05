@@ -262,7 +262,7 @@ func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, pa
 }
 
 func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
-	var rp []Event
+	rp := []Event{}
 
 	fmt.Println("SearchEvent", actorID, actorRole, sensorID, parameter)
 	if sensorID == "" && parameter == "" {
@@ -285,7 +285,8 @@ func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID,
 
 	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error: %s", err)
+		return rp, nil
 	}
 
 	return rp, nil

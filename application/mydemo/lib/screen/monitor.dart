@@ -13,91 +13,20 @@ class MonitorPage extends StatefulWidget {
 }
 
 class _MonitorList extends State<MonitorPage> {
-  final List<http.Event> items = [
-    // {
-    //   'sensor_id': 'S01',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': '2023-10-10 10:10:10'
-    // },
-    // {
-    //   'sensor_id': 'S02',
-    //   'parameter': 'Độ ẩm',
-    //   'value': 20,
-    //   'threshold': 15,
-    //   'created_at': "2023-10-08 09:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S03',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 08:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S04',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 07:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S05',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 06:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S06',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 05:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S07',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 04:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S08',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 03:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S09',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 02:10:10"
-    // },
-    // {
-    //   'sensor_id': 'S10',
-    //   'parameter': 'Nhiệt độ',
-    //   'value': 50,
-    //   'threshold': 40,
-    //   'created_at': "2023-10-08 01:10:10"
-    // },
-  ];
+  final List<http.Event> items = [];
 
   DateTime _selectedStartDate = DateTime.now();
   DateTime _selectedEndDate = DateTime.now();
 
-  List<String> options = ['Nhiệt độ', 'Độ ẩm'];
-  String _parameter = 'Nhiệt độ';
+  List<String> options = ['temperature', 'humidity'];
+  String _parameter = 'temperature';
 
   TextEditingController _sensorIDController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // fetchEvent();
+    fetchEvent();
   }
   
   startDateTimePickerWidget(BuildContext context, Function setState) {
@@ -130,6 +59,34 @@ class _MonitorList extends State<MonitorPage> {
         print(_selectedEndDate);
       },
     );
+  }
+
+  Future<void> searchEventOnPress() async {
+    if (_sensorIDController.text.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Vui lòng nhập mã cảm biến",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+      );
+      return;
+    }
+    final events = await http.searchEvent(_sensorIDController.text);
+    setState(() {
+      items.clear();
+      items.addAll(events);
+    });
+
+    Navigator.of(context).pop();
+  }
+
+  Future<void> searchCancelBtnOnPress() async {
+    final events = await http.getAllEvent();
+    setState(() {
+      items.clear();
+      items.addAll(events);
+    });
+
+    Navigator.of(context).pop();
   }
 
   void showSearchPopup(BuildContext context) {
@@ -165,29 +122,29 @@ class _MonitorList extends State<MonitorPage> {
                     //   ]
                     // ),
                     
-                    SizedBox(height: 10, width: 10),
-                    Row(
-                        children: [
-                          Text('Chỉ số:', style: TextStyle(fontWeight: FontWeight.bold)),
-                          SizedBox(height: 10, width: 10),
-                          DropdownButton(
-                            value: _parameter,
-                            items: options.map((String option) {
-                              return DropdownMenuItem(
-                                value: option,
-                                child: Text(option),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                // print(newValue);
-                                _parameter = newValue!;
-                                // print('Role $_parameter');
-                              });
-                            },
-                          ),
-                      ]
-                    ),
+                    // SizedBox(height: 10, width: 10),
+                    // Row(
+                    //     children: [
+                    //       Text('Chỉ số:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    //       SizedBox(height: 10, width: 10),
+                    //       DropdownButton(
+                    //         value: _parameter,
+                    //         items: options.map((String option) {
+                    //           return DropdownMenuItem(
+                    //             value: option,
+                    //             child: Text(option),
+                    //           );
+                    //         }).toList(),
+                    //         onChanged: (String? newValue) {
+                    //           setState(() {
+                    //             // print(newValue);
+                    //             _parameter = newValue!;
+                    //             // print('Role $_parameter');
+                    //           });
+                    //         },
+                    //       ),
+                    //   ]
+                    // ),
                     SizedBox(height: 10, width: 10),
                     Row(
                       children: [
@@ -203,19 +160,11 @@ class _MonitorList extends State<MonitorPage> {
               ), 
               actions: [
                 ElevatedButton(
-                  onPressed: () {
-                    // Thực hiện hành động tìm kiếm ở đây
-                    // Ví dụ: gọi một API để tìm kiếm theo từ khóa
-                    // print('Mã nhân viên: $userID');
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: searchEventOnPress,
                   child: Text('Tìm kiếm'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    // Đóng popup khi nhấn nút Hủy
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: searchCancelBtnOnPress,
                   child: Text('Hủy'),
                 ),
               ],
@@ -226,13 +175,14 @@ class _MonitorList extends State<MonitorPage> {
     );
   }
 
-  // void fetchEvent() async {
-  //   final events = await http.getAllEvent();
-  //   setState(() {
-  //     items.clear();
-  //     items.addAll(events);
-  //   });
-  // }
+  void fetchEvent() async {
+    final events = await http.getAllEvent();
+    setState(() {
+      items.clear();
+      items.addAll(events);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     const title = 'Monitor';
@@ -257,26 +207,10 @@ class _MonitorList extends State<MonitorPage> {
         ),
         body: Container(
           padding: EdgeInsets.all(16.0),
-          child: FutureBuilder(
-            future: http.getAllEvent(),
-            builder: (BuildContext ctx, AsyncSnapshot snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Error: ${snapshot.error}'),
-                  );
-                } else if (!snapshot.hasData) {
-                  return Center(
-                    child: Text('No data available'),
-                  );
-                } else {
-                  return ListView.builder(
-                    itemCount: snapshot.data.length,
+          child: ListView.builder(
+                    itemCount: items.length,
                     itemBuilder: (context, index) {
-                      final item = snapshot.data[index];
+                      final item = items[index];
                       // print(snapshot.data[index]);
                       return Card(
                         child: Column(
@@ -310,12 +244,11 @@ class _MonitorList extends State<MonitorPage> {
                         ),
                       );
                   },
-                  ); 
-                }
-              },
+                  ), 
+                // }
+              // },
         ),
       ),
-      ),
-    );
+      );
   }
 }
