@@ -16,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   String _userID = '';
   String _password = '';
 
-
+  bool _isPwdVisible = false;
 
   String getDeviceInfo() {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -119,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                         SizedBox(height: 30.0),
                         TextField(
                           controller: _passwordController,
-                          obscureText: true,
+                          obscureText: !_isPwdVisible,
                           decoration: InputDecoration(
                             labelText: 'Mật khẩu',
                             labelStyle:
@@ -133,6 +133,19 @@ class _LoginPageState extends State<LoginPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             prefixIcon: Icon(Icons.lock, color: Colors.blue),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPwdVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isPwdVisible = !_isPwdVisible;
+                                });
+                              },
+                            ),
                           ),
                         ),
                         SizedBox(height: 40.0),

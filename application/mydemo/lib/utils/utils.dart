@@ -25,3 +25,13 @@ Future<String> getToken() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString('token') ?? '';
 }
+
+Future<String> getUserId() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('userId') ?? 'UserID';
+}
+
+Future<bool> userIsAdmin() async {
+  final uId = await getUserId();
+  return uId == 'admin';
+}

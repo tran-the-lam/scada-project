@@ -38,6 +38,32 @@ class _AccountList extends State<AccountPage> {
     });
   }
 
+  Future<void> _handleSelected(String value, String userID) async {
+    switch (value) {
+      case 'reset_pwd':
+        // print('You Click on po up menu item ${value}');
+        final isSuccess = await http.resetPassword(userID);
+        if (isSuccess) {
+          Fluttertoast.showToast(
+            msg: "Reset mật khẩu thành công",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+          );
+        } else {
+          Fluttertoast.showToast(
+            msg: "Reset mật khẩu thất bại",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+          );
+        }
+        break;
+      case 'delete':
+        print('You Click on po up menu item ${value}');
+        break;
+    }
+  }
   Future<void> addAccountOnPress() async {
     _role = _role.trim();
 
@@ -204,7 +230,7 @@ class _AccountList extends State<AccountPage> {
                             ];
                           },
                           onSelected: (String value) {
-                            print('You Click on po up menu item ${value}');
+                            _handleSelected(value, items[index].userID);
                           },
                         ),
                       ],

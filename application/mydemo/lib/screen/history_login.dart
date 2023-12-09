@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:mydemo/utils/http.dart' as http;
 
 class HistoryLoginPage extends StatefulWidget {
   const HistoryLoginPage({super.key, required this.title});
@@ -11,39 +12,20 @@ class HistoryLoginPage extends StatefulWidget {
 }
 
 class _HistoryList extends State<HistoryLoginPage> {
-  final List<Map<String, dynamic>> items = [
-    {
-      'ip_address': '192.168.0.1',
-      'device': 'IPhone 12 Pro Max',
-      'created_at': '2023-10-10 10:10:10'
-    },
-    {
-      'ip_address': '192.168.1.1',
-      'device': 'Huawei P40 Pro',
-      'created_at': "2023-10-08 09:10:10"
-    },
-    {
-      'ip_address': '23.123.432.12',
-      'device': 'Samsung Galaxy S21',
-      'created_at': "2023-10-08 08:10:10"
-    },
-    {
-      'ip_address': '123.12.32.12',
-      'device': 'Macbook Air 2020',
-      'created_at': "2023-10-08 07:10:10"
-    },
-    {
-      'ip_address': '231.12.342.12',
-      'device': 'Macbook Pro 2020',
-      'created_at': "2023-10-08 06:10:10"
-    },
-    {
-      'ip_address': '231.341.12.32',
-      'device': 'BPhone 4',
-      'created_at': "2023-10-08 05:10:10"
-    },
-    
-  ];
+  final List<http.HistoryLogin> items = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    fetchHistory();
+  }
+
+  fetchHistory() async {
+    var events = await http.GetHistoryLogin();
+    setState(() {
+      items.addAll(events);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,19 +51,19 @@ class _HistoryList extends State<HistoryLoginPage> {
             return Card(
               child: Column(
                 children: [
+                  // Container(
+                  //   padding: const EdgeInsets.all(8.0),
+                  //   alignment: Alignment.centerLeft,
+                  //   child: Text("Địa chỉ: " + items[index]['ip_address']),
+                  // ),
                   Container(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("Thiết bị: " + items[index].device),
                     alignment: Alignment.centerLeft,
-                    child: Text("Địa chỉ: " + items[index]['ip_address']),
                   ),
                   Container(
                     padding: EdgeInsets.all(8.0),
-                    child: Text("Thiết bị: " + items[index]['device']),
-                    alignment: Alignment.centerLeft,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text("Thời gian: " + items[index]['created_at']),
+                    child: Text("Thời gian: " + items[index].createdAt),
                     alignment: Alignment.centerLeft,
                   ),
                 ],

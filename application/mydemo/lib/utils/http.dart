@@ -11,6 +11,7 @@ Future<String> login(String userID, String pwd, String deviceInfo) async {
   var headers = {
     "Content-Type": "application/json",
     "User-Agent": deviceInfo,
+    "Remote-Address": ""
   };
 
   var response = await http.post(url, body: body, headers: headers).timeout(
@@ -165,20 +166,107 @@ Future<String> addUser(String userID, String role) async {
   return responseData;
 }
 
-Future<void> sendDataToApi() async {
-  var url = Uri.parse("https://example.com/api/data");
+// Future<void> sendDataToApi() async {
+//   var url = Uri.parse("https://example.com/api/data");
 
-  // Tạo body dữ liệu
-  var body = {"name": "John", "age": 25};
+//   // Tạo body dữ liệu
+//   var body = {"name": "John", "age": 25};
 
-  // Gửi request POST với body dữ liệu
-  var response = await http.post(url, body: body);
+//   // Gửi request POST với body dữ liệu
+//   var response = await http.post(url, body: body);
 
+//   if (response.statusCode == 200) {
+//     // Xử lý dữ liệu trong response.body
+//     print(response.body);
+//   } else {
+//     // Xử lý lỗi
+//     print('Lỗi ${response.statusCode}');
+//   }
+// }
+
+class HistoryLogin {
+  // final String ipAddress;
+  final String device;
+  final String createdAt;
+
+  HistoryLogin({
+    required this.device,
+    required this.createdAt,
+  });
+}
+
+Future<List<HistoryLogin>> GetHistoryLogin() async {
+  String url = "${Constant.BASE_URL}/users/history/login";
+  final token = await utils.getToken();
+  Map<String, String> requestHeaders = {
+    'Authorization': 'Bearer $token',
+    'Accept': '*/*',
+    "Access-Control-Allow-Origin": "*",
+  };
+
+  final response = await http.get(Uri.parse(url), headers: requestHeaders);
+  var responseData = json.decode(response.body)["data"];
+
+  List<HistoryLogin> hl = [];
+  for (var item in responseData) {
+    HistoryLogin h = HistoryLogin(
+      device: item['user_agent'],
+      createdAt: item['time'],
+    );
+    hl.add(h);
+  }
+
+  return hl;
+} 
+
+
+Future<bool> updatePassword(String oldPwd, String newPwd) async {
+  var url = Uri.parse("${Constant.BASE_URL}/users/password");
+  var body = json.encode({"old_password": oldPwd, "new_password": newPwd});
+  var headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer ${await utils.getToken()}",
+  };
+
+  var response = await http.put(url, body: body, headers: headers).timeout(
+    const Duration(seconds: 5),
+    onTimeout: () {
+      // Time has run out, do what you wanted to do.
+      return http.Response('Error', 408); // Request Timeout response status code
+    },
+  );
+
+  print(response.body);
   if (response.statusCode == 200) {
     // Xử lý dữ liệu trong response.body
-    print(response.body);
-  } else {
-    // Xử lý lỗi
-    print('Lỗi ${response.statusCode}');
+    
+    return true;
   }
+
+  return false;
+}
+
+
+Future<bool> resetPassword(String userId) async {
+  var url = Uri.parse("${Constant.BASE_URL}/users/${userId}/reset-password");
+  var headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer ${await utils.getToken()}",
+  };
+
+  var response = await http.post(url, headers: headers).timeout(
+    const Duration(seconds: 5),
+    onTimeout: () {
+      // Time has run out, do what you wanted to do.
+      return http.Response('Error', 408); // Request Timeout response status code
+    },
+  );
+
+  print(response.body);
+  if (response.statusCode == 200) {
+    return true;
+  }
+
+  return false;
+
 }
