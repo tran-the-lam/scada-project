@@ -10,11 +10,12 @@ type LoginInfo struct {
 type User struct {
 	UserID   string `json:"user_id"`
 	Role     string `json:"role"`
-	Password string `json:"password"`
+	Password string `json:"password,omitempty"`
+	Status   int    `json:"status"`
 }
 
 type Event struct {
-	Event     string  `json:"event"`
+	EventName string  `json:"event"`
 	SensorID  string  `json:"sensor_id"`
 	Parameter string  `json:"parameter"`
 	Value     float64 `json:"value"`

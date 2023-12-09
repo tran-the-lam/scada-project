@@ -19,6 +19,16 @@ func userAuth(c *fiber.Ctx) error {
 		return e.Unauthorized()
 	}
 
+	IPAddress := c.Get("X-Real-Ip")
+	if IPAddress == "" {
+		IPAddress = c.Get("X-Forwarded-For")
+	}
+	if IPAddress == "" {
+		IPAddress = c.Get("Remote-Address")
+	}
+
+	fmt.Printf("====IP Address: %s\n", IPAddress)
+
 	token, _ := jwt.Parse(reqToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -31,7 +41,7 @@ func userAuth(c *fiber.Ctx) error {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		c.Locals(constant.LOCAL_USER_ID, claims["user_id"])
 		c.Locals(constant.LOCAL_USER_ROLE, claims["user_role"])
-		c.Locals(constant.LOCAL_IP_ADDR, c.Get("ip-addr"))
+		c.Locals(constant.LOCAL_IP_ADDR, IPAddress)
 		c.Locals(constant.LOCAL_DEVICE_ID, c.Get("device-id"))
 		c.Locals(constant.LOCAL_USER_AGENT, c.Get("user-agent"))
 		return c.Next()

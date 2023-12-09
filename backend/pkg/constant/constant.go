@@ -10,4 +10,7 @@ const (
 	TOKEN_SECRET     = "secret"
 
 	API_KEY = "scada-api-key"
+
+	TEMPERATURE_SENSOR = "temperature"
+	HUMIDITY_SENSOR    = "humidity"
 )

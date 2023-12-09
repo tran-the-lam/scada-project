@@ -97,3 +97,26 @@ go test -cover ./...
 ok      backend/pkg/utils       0.290s  coverage: 100.0% of statements
 ok      backend/service (cached)        coverage: 76.6% of statements
 ```
+
+TODO
+Chuẩn bị API để ghép vào giao diện (thứ 3 phải xong)
+[x] API get all event, save key allEvent => Call function API get history by Key
+[x] API search => save key sensor_id, parameter => Call function get history by Key
+[x] API update my password
+[x] ADD user, 
+remove_user,
+[x] reset password
+
+Chức năng chung:
+- Xem lại các chỉ số giám sát được gửi từ cảm biến
+- Màn profile
+Chức năng admin:
+- Thêm, reset mật khẩu cho user, tạm thời bỏ chức năng xóa user hoặc là có thể làm lưu danh sách xóa vào 1 key rồi tiến hành merge 2 mảng từ 'allUser' và 'deleteUser' => Cần nghĩ thêm
+
+
+Tạo script để tạo dữ liệu mẫu
+
+Luận văn sẽ nói về những vấn đề gì
++) 
++) Những phần mà ứng dụng có thể cải tiến, như là kết hợp với 1 vài cơ sở dữ liệu nữa để làm nhiệm vụ search, ...
++) Có thể xóa những dữ liệu không dùng bằng phương thức DelState => nhưng trước tiên cần lưu chúng ở một nơi nào đó an toàn
