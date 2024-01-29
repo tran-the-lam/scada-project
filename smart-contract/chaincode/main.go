@@ -161,7 +161,21 @@ func (s *SmartContract) GetAllUsers(ctx contractapi.TransactionContextInterface)
 		}
 
 		// Ignore inactive user
-		if transaction.Status == 0 {
+		userInfo, err := ctx.GetStub().GetState(buildUserKey(transaction.UserID))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get from world state. %s", err.Error())
+		}
+
+		if userInfo == nil {
+			return nil, fmt.Errorf("user not found")
+		}
+
+		var user User
+		if err := json.Unmarshal(userInfo, &user); err != nil {
+			return nil, err
+		}
+
+		if user.Status == 0 {
 			continue
 		}
 
