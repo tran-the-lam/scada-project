@@ -192,6 +192,28 @@ func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, role 
 
 func (s *service) UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error {
 	fmt.Println("Update password", userID, oldPwd, newPwd)
+	// Validate old password
+	args1 := []string{fmt.Sprintf("user:%s", userID)}
+	evaluateResponse, err := s.contract.EvaluateTransaction("QueryKey", args1...)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return err
+	}
+
+	if len(evaluateResponse) > 0 {
+		var user User
+		err = json.Unmarshal([]byte(string(evaluateResponse)), &user)
+		if err != nil {
+			panic(err)
+		}
+
+		if user.Password != s.hashPassword(oldPwd) {
+			return e.BadRequest("Old password incorrect")
+		}
+	} else {
+		return e.NotFound()
+	}
+
 	args := []string{userID, s.hashPassword(oldPwd), s.hashPassword(newPwd)}
 	txn_proposal, err := s.contract.NewProposal("UpdatePassword", client.WithArguments(args...))
 	if err != nil {
