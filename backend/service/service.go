@@ -166,6 +166,18 @@ func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, role 
 		return e.BadRequest("role must be manager or employee")
 	}
 
+	// Check user exist
+	args1 := []string{fmt.Sprintf("user:%s", userID)}
+	evaluateResponse, err := s.contract.EvaluateTransaction("QueryKey", args1...)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return err
+	}
+
+	if len(evaluateResponse) > 0 {
+		return e.BadRequest("User already exist")
+	}
+
 	hasPwd := s.hashPassword(DEFAULT_PWD)
 	fmt.Println("AddUser", actorID, actorRole, userID, role, hasPwd)
 	args := []string{actorID, userID, role, s.hashPassword(DEFAULT_PWD)}
