@@ -208,7 +208,7 @@ func (s *service) GetHistoryChangePassword(ctx context.Context, actorID, actorRo
 }
 
 func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error) {
-	var rp []LoginInfo
+	rp := []LoginInfo{}
 
 	// Only admin can query all key
 	if actorRole != "admin" && actorID != key {
@@ -220,6 +220,10 @@ func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key s
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return rp, err
+	}
+
+	if len(evaluateResponse) == 0 {
+		return rp, nil
 	}
 
 	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
@@ -243,7 +247,7 @@ func (s *service) AddEvent(ctx context.Context, event Event) error {
 }
 
 func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
-	var rp []Event
+	rp := []Event{}
 
 	fmt.Println("GetEvent", actorID, actorRole, sensorID, parameter)
 	args := []string{sensorID}
@@ -251,6 +255,10 @@ func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, pa
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return rp, err
+	}
+
+	if len(evaluateResponse) == 0 {
+		return rp, nil
 	}
 
 	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
@@ -281,6 +289,10 @@ func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID,
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return rp, err
+	}
+
+	if len(evaluateResponse) == 0 {
+		return rp, nil
 	}
 
 	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
@@ -325,7 +337,7 @@ func (s *service) DeleteUser(ctx context.Context, actorID, actorRole, userID str
 }
 
 func (s *service) GetUsers(ctx context.Context, actorID, actorRole string) ([]User, error) {
-	var rp []User
+	rp := []User{}
 
 	fmt.Println("GetUsers", actorID, actorRole)
 	if actorRole != "admin" {
@@ -337,6 +349,10 @@ func (s *service) GetUsers(ctx context.Context, actorID, actorRole string) ([]Us
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return rp, err
+	}
+
+	if len(evaluateResponse) == 0 {
+		return rp, nil
 	}
 
 	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
