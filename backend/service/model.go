@@ -22,3 +22,7 @@ type Event struct {
 	Threshold   float64 `json:"threshold"`
 	Timestamp   uint64  `json:"timestamp"`
 }
+
+type ChangePwd struct {
+	UpdatedAt int64 `json:"updated_at"`
+}

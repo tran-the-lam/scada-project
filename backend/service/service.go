@@ -22,7 +22,7 @@ type IService interface {
 	Login(ctx context.Context, userID, ip, userAgent, deviceID, password string) (string, error)
 	AddUser(ctx context.Context, actorID, actorRole, userID, role string) error
 	GetUsers(ctx context.Context, actorID, actorRole, status string) ([]User, error)
-	GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error)
+	GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) ([]ChangePwd, error)
 	GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error)
 	AddEvent(ctx context.Context, event Event) error
 	GetEvent(ctx context.Context, actorID, actorRole, parameterID, parameter string) ([]Event, error)
@@ -224,21 +224,33 @@ func (s *service) UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) 
 	return s.execTxn(txn_proposal)
 }
 
-func (s *service) GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error) {
+func (s *service) GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) ([]ChangePwd, error) {
+	rp := []ChangePwd{}
+
 	// Only admin can query all key
 	if actorRole != "admin" && actorID != key {
-		return "", e.Forbidden()
+		return rp, e.Forbidden()
 	}
 
 	args := []string{key}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetTransactionHistory", args...)
+
+	evaluateResponse, err := s.contract.EvaluateTransaction("GetHistoryChangePassword", args...)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
-		return "", err
+		return rp, err
 	}
 
 	fmt.Printf("GetHistoryChangePassword Query Response: %s\n", string(evaluateResponse))
-	return string(evaluateResponse), nil
+	if len(evaluateResponse) == 0 {
+		return rp, nil
+	}
+
+	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
+	if err != nil {
+		panic(err)
+	}
+
+	return rp, nil
 }
 
 func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error) {
