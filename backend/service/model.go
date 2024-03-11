@@ -15,10 +15,10 @@ type User struct {
 }
 
 type Event struct {
-	EventName string  `json:"event"`
-	SensorID  string  `json:"sensor_id"`
-	Parameter string  `json:"parameter"`
-	Value     float64 `json:"value"`
-	Threshold float64 `json:"threshold"`
-	Timestamp uint64  `json:"timestamp"`
+	EventName   string  `json:"event"`
+	ParameterID string  `json:"parameter_id"` // convert sensor_id to parameter_id
+	Parameter   string  `json:"parameter"`
+	Value       float64 `json:"value"`
+	Threshold   float64 `json:"threshold"`
+	Timestamp   uint64  `json:"timestamp"`
 }

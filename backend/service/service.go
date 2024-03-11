@@ -21,12 +21,12 @@ type IService interface {
 	UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error
 	Login(ctx context.Context, userID, ip, userAgent, deviceID, password string) (string, error)
 	AddUser(ctx context.Context, actorID, actorRole, userID, role string) error
-	GetUsers(ctx context.Context, actorID, actorRole string) ([]User, error)
+	GetUsers(ctx context.Context, actorID, actorRole, status string) ([]User, error)
 	GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error)
 	GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error)
 	AddEvent(ctx context.Context, event Event) error
-	GetEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error)
-	SearchEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error)
+	GetEvent(ctx context.Context, actorID, actorRole, parameterID, parameter string) ([]Event, error)
+	SearchEvent(ctx context.Context, actorID, actorRole, parameterID, parameter string) ([]Event, error)
 	ResetPassword(ctx context.Context, actorID, actorRole, userID string) error
 	DeleteUser(ctx context.Context, actorID, actorRole, userID string) error
 }
@@ -270,7 +270,7 @@ func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key s
 
 func (s *service) AddEvent(ctx context.Context, event Event) error {
 	fmt.Println("AddEvent: %+v", event)
-	args := []string{event.EventName, event.SensorID, event.Parameter, fmt.Sprintf("%f", event.Value), fmt.Sprintf("%f", event.Threshold), fmt.Sprintf("%d", event.Timestamp)}
+	args := []string{event.EventName, event.ParameterID, event.Parameter, fmt.Sprintf("%f", event.Value), fmt.Sprintf("%f", event.Threshold), fmt.Sprintf("%d", event.Timestamp)}
 	txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
 	if err != nil {
 		fmt.Printf("Error creating txn proposal: %s", err)
@@ -280,11 +280,11 @@ func (s *service) AddEvent(ctx context.Context, event Event) error {
 	return s.execTxn(txn_proposal)
 }
 
-func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
+func (s *service) GetEvent(ctx context.Context, actorID, actorRole, parameterID, parameter string) ([]Event, error) {
 	rp := []Event{}
 
-	fmt.Println("GetEvent", actorID, actorRole, sensorID, parameter)
-	args := []string{sensorID}
+	fmt.Println("GetEvent", actorID, actorRole, parameterID, parameter)
+	args := []string{parameterID}
 	evaluateResponse, err := s.contract.EvaluateTransaction("GetAllEvents", args...)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
@@ -303,15 +303,15 @@ func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, pa
 	return rp, nil
 }
 
-func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
+func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, parameterID, parameter string) ([]Event, error) {
 	rp := []Event{}
 
-	fmt.Println("SearchEvent", actorID, actorRole, sensorID, parameter)
-	if sensorID == "" && parameter == "" {
-		return nil, e.BadRequest("sensorID or parameter must be not empty")
+	fmt.Println("SearchEvent", actorID, actorRole, parameterID, parameter)
+	if parameterID == "" && parameter == "" {
+		return nil, e.BadRequest("parameterID or parameter must be not empty")
 	}
 
-	key := sensorID
+	key := parameterID
 	isSensor := 1
 	if len(parameter) > 0 {
 		key = parameter
@@ -370,7 +370,7 @@ func (s *service) DeleteUser(ctx context.Context, actorID, actorRole, userID str
 	return s.execTxn(txn_proposal)
 }
 
-func (s *service) GetUsers(ctx context.Context, actorID, actorRole string) ([]User, error) {
+func (s *service) GetUsers(ctx context.Context, actorID, actorRole, status string) ([]User, error) {
 	rp := []User{}
 
 	fmt.Println("GetUsers", actorID, actorRole)
@@ -378,7 +378,7 @@ func (s *service) GetUsers(ctx context.Context, actorID, actorRole string) ([]Us
 		return rp, e.Forbidden()
 	}
 
-	args := []string{}
+	args := []string{status}
 	evaluateResponse, err := s.contract.EvaluateTransaction("GetAllUsers", args...)
 	if err != nil {
 		fmt.Printf("Error: %s", err)

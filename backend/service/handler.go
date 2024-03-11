@@ -66,7 +66,12 @@ func GetAllUserHdl(service IService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
 		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
-		rs, err := service.GetUsers(c.Context(), actorID, actorRole)
+		status := c.Query("status")
+		if status != "-1" && status != "0" && status != "1" {
+			return e.BadRequest("Status must -1 or 0 or 1")
+		}
+
+		rs, err := service.GetUsers(c.Context(), actorID, actorRole, status)
 		if err != nil {
 			return err
 		}
@@ -163,8 +168,8 @@ func AddEventHdl(service IService) fiber.Handler {
 }
 
 type GetEventQuery struct {
-	Parameter string `query:"parameter"`
-	SensorID  string `query:"sensor_id"`
+	Parameter   string `query:"parameter"`
+	ParameterID string `query:"parameter_id"`
 }
 
 func GetEventHdl(service IService) fiber.Handler {
@@ -178,7 +183,7 @@ func GetEventHdl(service IService) fiber.Handler {
 		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
 		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
 
-		events, err := service.GetEvent(c.Context(), actorID, actorRole, query.SensorID, query.Parameter)
+		events, err := service.GetEvent(c.Context(), actorID, actorRole, query.ParameterID, query.Parameter)
 		if err != nil {
 			return err
 		}
@@ -197,7 +202,7 @@ func SearchEventHdl(service IService) fiber.Handler {
 		actorID := c.Locals(constant.LOCAL_USER_ID).(string)
 		actorRole := c.Locals(constant.LOCAL_USER_ROLE).(string)
 
-		events, err := service.SearchEvent(c.Context(), actorID, actorRole, query.SensorID, query.Parameter)
+		events, err := service.SearchEvent(c.Context(), actorID, actorRole, query.ParameterID, query.Parameter)
 		if err != nil {
 			return err
 		}

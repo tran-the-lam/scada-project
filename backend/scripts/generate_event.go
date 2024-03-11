@@ -14,7 +14,7 @@ type EValue struct {
 	Threshold int `json:"threshold"`
 }
 
-var sensorIDs = []string{"sensor1", "sensor2", "sensor3", "sensor4", "sensor5", "sensor6", "sensor7", "sensor8", "sensor9", "sensor10"}
+var parameterIDs = []string{"sensor1", "sensor2", "sensor3", "sensor4", "sensor5", "sensor6", "sensor7", "sensor8", "sensor9", "sensor10"}
 var parameters = []string{"temperature", "humidity"}
 var evalues = []EValue{{Value: 40, Threshold: 25}, {Value: 60, Threshold: 35}, {Value: 80, Threshold: 30}, {Value: 100, Threshold: 34}, {Value: 120, Threshold: 30}, {Value: 140, Threshold: 30}, {Value: 160, Threshold: 30}, {Value: 180, Threshold: 30}, {Value: 200, Threshold: 30}}
 var roles = []string{"employee", "manager"}
@@ -59,17 +59,17 @@ func gen50event() {
 	for i := 1; i <= 50; i++ {
 
 		rand.Seed(time.Now().UnixNano())
-		randSIndex := rand.Intn(len(sensorIDs))
+		randSIndex := rand.Intn(len(parameterIDs))
 		randPIndex := rand.Intn(len(parameters))
 		randEIndex := rand.Intn(len(evalues))
 
-		sensorID := sensorIDs[randSIndex]
+		parameterID := parameterIDs[randSIndex]
 		parameter := parameters[randPIndex]
 		value := evalues[randEIndex].Value
 		threshold := evalues[randEIndex].Threshold
 		now := time.Now().Unix()
 
-		payload := fmt.Sprintf(`{"event": "limit_exceeded", "sensor_id": "%s", "parameter": "%s", "value": %d, "threshold": %d, "timestamp": %d}`, sensorID, parameter, value, threshold, now)
+		payload := fmt.Sprintf(`{"event": "limit_exceeded", "parameter_id": "%s", "parameter": "%s", "value": %d, "threshold": %d, "timestamp": %d}`, parameterID, parameter, value, threshold, now)
 		fmt.Println(payload)
 		sendReq("http://localhost:3000/events", payload, "")
 
