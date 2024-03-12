@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
+	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -19,6 +21,10 @@ type LoginInfo struct {
 	Time      string `json:"time"`
 }
 
+type ChangePwd struct {
+	UpdatedAt int64 `json:"updated_at"`
+}
+
 type User struct {
 	UserID   string `json:"user_id"`
 	Role     string `json:"role"`
@@ -28,7 +34,7 @@ type User struct {
 
 type Event struct {
 	Event     string  `json:"event"`
-	SensorID  string  `json:"sensor_id"`
+	SensorID  string  `json:"parameter_id"` // convert sensor_id to parameter_id
 	Parameter string  `json:"parameter"`
 	Value     float64 `json:"value"`
 	Threshold float64 `json:"threshold"`
@@ -37,6 +43,10 @@ type Event struct {
 
 func buildUserKey(userID string) string {
 	return fmt.Sprintf("user:%s", userID)
+}
+
+func buildUserChangePassword(userID string) string {
+	return fmt.Sprintf("user:%s:change-pwd", userID)
 }
 
 func buildEventKey(sensorID, parameter string) string {
@@ -141,13 +151,18 @@ func (s *SmartContract) AddUser(ctx contractapi.TransactionContextInterface, act
 	return nil
 }
 
-func (s *SmartContract) GetAllUsers(ctx contractapi.TransactionContextInterface) ([]User, error) {
+func (s *SmartContract) GetAllUsers(ctx contractapi.TransactionContextInterface, status string) ([]User, error) {
 	var transactions []User
 	resultsIterator, err := ctx.GetStub().GetHistoryForKey("allUser")
 	if err != nil {
 		return transactions, fmt.Errorf("GetTransactionHistory exec error: %v", err)
 	}
 	defer resultsIterator.Close()
+
+	intStatus, err := strconv.Atoi(status)
+	if err != nil {
+		return nil, err
+	}
 
 	for resultsIterator.HasNext() {
 		response, err := resultsIterator.Next()
@@ -175,9 +190,13 @@ func (s *SmartContract) GetAllUsers(ctx contractapi.TransactionContextInterface)
 			return nil, err
 		}
 
-		if user.Status == 0 {
+		if user.Status != intStatus && intStatus != -1 {
 			continue
 		}
+
+		// if user.Status == 0 { // TODO: Filter in backend
+		// 	continue
+		// }
 
 		// Hide password
 		transaction.Password = ""
@@ -311,6 +330,13 @@ func (s *SmartContract) UpdatePassword(ctx contractapi.TransactionContextInterfa
 	}
 
 	if err := ctx.GetStub().PutState(buildUserKey(user.UserID), userJSON); err != nil {
+		return fmt.Errorf("failed to put to world state. %s", err.Error())
+	}
+
+	// update key change-pwd
+	updateEvent := ChangePwd{UpdatedAt: time.Now().Unix()}
+	ueJson, _ := json.Marshal(updateEvent)
+	if err := ctx.GetStub().PutState(buildUserChangePassword(user.UserID), ueJson); err != nil {
 		return fmt.Errorf("failed to put to world state. %s", err.Error())
 	}
 
@@ -476,6 +502,31 @@ func (s *SmartContract) GetEventsByKey(ctx contractapi.TransactionContextInterfa
 	}
 
 	return events, nil
+}
+
+func (s *SmartContract) GetHistoryChangePassword(ctx contractapi.TransactionContextInterface, userID string) ([]ChangePwd, error) {
+	var transactions []ChangePwd
+	resultsIterator, err := ctx.GetStub().GetHistoryForKey(buildUserChangePassword(userID))
+	if err != nil {
+		return transactions, fmt.Errorf("GetTransactionHistory exec error: %v", err)
+	}
+	defer resultsIterator.Close()
+
+	for resultsIterator.HasNext() {
+		response, err := resultsIterator.Next()
+		if err != nil {
+			return transactions, fmt.Errorf("GetTransactionHistory iterator error: %v", err)
+		}
+
+		var transaction ChangePwd
+		if err := json.Unmarshal(response.Value, &transaction); err != nil {
+			return transactions, fmt.Errorf("GetTransactionHistory unmarshal error: %v", err)
+		}
+
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, nil
 }
 
 func main() {
