@@ -200,6 +200,7 @@ func (s *SmartContract) GetAllUsers(ctx contractapi.TransactionContextInterface,
 
 		// Hide password
 		transaction.Password = ""
+		transaction.Status = user.Status
 		transactions = append(transactions, transaction)
 	}
 
