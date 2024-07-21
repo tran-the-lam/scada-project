@@ -59,7 +59,7 @@ func LoginFailed() ApiError {
 func Forbidden() ApiError {
 	return ApiError{
 		HttpCode: 403,
-		Code:     10005,
+		Code:     10006,
 		Message:  "Forbidden",
 	}
 }
@@ -67,7 +67,7 @@ func Forbidden() ApiError {
 func TxErr(msg string) ApiError {
 	return ApiError{
 		HttpCode: 500,
-		Code:     10006,
+		Code:     10007,
 		Message:  msg,
 	}
 }

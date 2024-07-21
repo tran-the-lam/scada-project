@@ -15,9 +15,8 @@ import (
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 )
 
+// Xác định các hàm xử lý nghiệp vụ
 type IService interface {
-	PutState(ctx context.Context, key, val string) error
-	GetState(ctx context.Context, actorID, actorRole, key string) (string, error)
 	UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error
 	Login(ctx context.Context, userID, ip, userAgent, deviceID, password string) (string, error)
 	AddUser(ctx context.Context, actorID, actorRole, userID, role string) error
@@ -31,6 +30,7 @@ type IService interface {
 	DeleteUser(ctx context.Context, actorID, actorRole, userID string) error
 }
 
+// Xác định cấu trúc dữ liệu
 type service struct {
 	gateway  client.Gateway
 	h        hash.Hash
@@ -38,10 +38,9 @@ type service struct {
 	saltPwd  string
 }
 
-const DEFAULT_PWD = "12345678"
+var DEFAULT_PWD = "12345678"
 
 func NewService(cfg *config.OrgSetup) IService {
-	fmt.Printf("Init service %s = %s = %s \n", cfg.ChannelID, cfg.ChainCodeID, cfg.SaltPwd)
 	svc := &service{
 		gateway:  cfg.Gateway,
 		h:        sha256.New(),
@@ -49,9 +48,7 @@ func NewService(cfg *config.OrgSetup) IService {
 		saltPwd:  cfg.SaltPwd,
 	}
 
-	// init admin info
 	svc.initAdmin()
-
 	return svc
 }
 func (s *service) hashPassword(pwd string) string {
@@ -63,17 +60,13 @@ func (s *service) hashPassword(pwd string) string {
 func (s *service) execTxn(txn *client.Proposal) error {
 	txn_endorsed, err := txn.Endorse()
 	if err != nil {
-		fmt.Printf("Error endorsing txn: %s", err)
 		return e.TxErr(err.Error())
 	}
 
 	txn_committed, err := txn_endorsed.Submit()
 	if err != nil {
-		fmt.Printf("Error submitting transaction: %s", err)
 		return e.TxErr(err.Error())
 	}
-
-	fmt.Printf("Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result())
 
 	return nil
 }
@@ -82,45 +75,18 @@ func (s *service) execTxn(txn *client.Proposal) error {
 func (s *service) initAdmin() error {
 	txn_proposal, err := s.contract.NewProposal("Init", client.WithArguments())
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
 		return e.TxErr(err.Error())
 	}
 
 	return s.execTxn(txn_proposal)
 }
 
-func (s *service) PutState(ctx context.Context, key, val string) error {
-	args := []string{key, val}
-	txn_proposal, err := s.contract.NewProposal("CreateKey", client.WithArguments(args...))
-	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
-		return e.TxErr(err.Error())
-	}
-
-	return s.execTxn(txn_proposal)
-}
-
-func (s *service) GetState(ctx context.Context, actorID, actorRole, key string) (string, error) {
-	// Only admin can query all key
-	if actorRole != "admin" && actorID != key {
-		return "", e.Forbidden()
-	}
-
-	evaluateResponse, err := s.contract.EvaluateTransaction("QueryKey", key)
-	if err != nil {
-		fmt.Printf("Error: %s", err)
-		return "", err
-	}
-	return string(evaluateResponse), nil
-}
-
+// Hàm xử lý đăng nhập
 func (s *service) Login(ctx context.Context, userID, ip, userAgent, deviceID, password string) (string, error) {
 	hashPwd := s.hashPassword(password)
-	fmt.Println("Login", userID, hashPwd)
 	args := []string{userID, hashPwd}
-	roleResponse, err := s.contract.EvaluateTransaction("VerifyUser", args...)
+	roleResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_VERIFY_USER, args...)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
 		return "", e.LoginFailed()
 	}
 
@@ -143,9 +109,8 @@ func (s *service) Login(ctx context.Context, userID, ip, userAgent, deviceID, pa
 	// Save login info
 	now := time.Now().Format("2006-01-02 15:04:05")
 	args = []string{userID, ip, userAgent, deviceID, now}
-	txn_proposal, err := s.contract.NewProposal("SaveLoginInfo", client.WithArguments(args...))
+	txn_proposal, err := s.contract.NewProposal(constant.SMC_FUNC_SAVE_LOGIN, client.WithArguments(args...))
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
 		return "", e.TxErr(err.Error())
 	}
 
@@ -156,21 +121,20 @@ func (s *service) Login(ctx context.Context, userID, ip, userAgent, deviceID, pa
 	return t, nil
 }
 
+// Hàm thêm người dùng
 func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, role string) error {
-	fmt.Println("AddUser", actorID, actorRole, userID, role)
-	if actorRole != "admin" {
+	if actorRole != constant.ADMIN_ROLE {
 		return e.Forbidden()
 	}
 
-	if role != "manager" && role != "employee" {
+	if role != constant.MANAGER_ROLE && role != constant.EMPLOYEE_ROLE {
 		return e.BadRequest("role must be manager or employee")
 	}
 
 	// Check user exist
 	args1 := []string{fmt.Sprintf("user:%s", userID)}
-	evaluateResponse, err := s.contract.EvaluateTransaction("QueryKey", args1...)
+	evaluateResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_QUERY_KEY, args1...)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
 		return err
 	}
 
@@ -178,23 +142,20 @@ func (s *service) AddUser(ctx context.Context, actorID, actorRole, userID, role 
 		return e.BadRequest("User already exist")
 	}
 
-	hasPwd := s.hashPassword(DEFAULT_PWD)
-	fmt.Println("AddUser", actorID, actorRole, userID, role, hasPwd)
 	args := []string{actorID, userID, role, s.hashPassword(DEFAULT_PWD)}
-	txn_proposal, err := s.contract.NewProposal("AddUser", client.WithArguments(args...))
+	txn_proposal, err := s.contract.NewProposal(constant.SMC_FUNC_ADD_USER, client.WithArguments(args...))
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
 		return e.TxErr(err.Error())
 	}
 
 	return s.execTxn(txn_proposal)
 }
 
+// Hàm cập nhật mật khẩu
 func (s *service) UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) error {
-	fmt.Println("Update password", userID, oldPwd, newPwd)
 	// Validate old password
 	args1 := []string{fmt.Sprintf("user:%s", userID)}
-	evaluateResponse, err := s.contract.EvaluateTransaction("QueryKey", args1...)
+	evaluateResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_QUERY_KEY, args1...)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return err
@@ -215,44 +176,41 @@ func (s *service) UpdatePwd(ctx context.Context, userID, oldPwd, newPwd string) 
 	}
 
 	args := []string{userID, s.hashPassword(oldPwd), s.hashPassword(newPwd)}
-	txn_proposal, err := s.contract.NewProposal("UpdatePassword", client.WithArguments(args...))
+	txn_proposal, err := s.contract.NewProposal(constant.SMC_FUNC_UPDATE_PWD, client.WithArguments(args...))
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
 		return e.TxErr(err.Error())
 	}
 
 	return s.execTxn(txn_proposal)
 }
 
+// Hàm lấy lịch sử thay đổi mật khẩu
 func (s *service) GetHistoryChangePassword(ctx context.Context, actorID, actorRole, key string) (string, error) {
 	// Only admin can query all key
-	if actorRole != "admin" && actorID != key {
+	if actorRole != constant.ADMIN_ROLE && actorID != key {
 		return "", e.Forbidden()
 	}
 
 	args := []string{key}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetTransactionHistory", args...)
+	evaluateResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_GET_TRANSACTION_HISTORY, args...)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
 		return "", err
 	}
 
-	fmt.Printf("GetHistoryChangePassword Query Response: %s\n", string(evaluateResponse))
 	return string(evaluateResponse), nil
 }
 
+// Hàm lấy lịch sử đăng nhập
 func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key string) ([]LoginInfo, error) {
 	rp := []LoginInfo{}
 
-	// Only admin can query all key
-	if actorRole != "admin" && actorID != key {
+	if actorRole != constant.ADMIN_ROLE && actorID != key {
 		return rp, e.Forbidden()
 	}
 
 	args := []string{fmt.Sprintf("login:%s", key)}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetTransactionHistory", args...)
+	evaluateResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_GET_TRANSACTION_HISTORY, args...)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
 		return rp, err
 	}
 
@@ -268,24 +226,23 @@ func (s *service) GetHistoryLogin(ctx context.Context, actorID, actorRole, key s
 	return rp, nil
 }
 
+// Hàm thêm sự kiện
 func (s *service) AddEvent(ctx context.Context, event Event) error {
-	fmt.Println("AddEvent: %+v", event)
 	args := []string{event.EventName, event.SensorID, event.Parameter, fmt.Sprintf("%f", event.Value), fmt.Sprintf("%f", event.Threshold), fmt.Sprintf("%d", event.Timestamp)}
-	txn_proposal, err := s.contract.NewProposal("AddEvent", client.WithArguments(args...))
+	txn_proposal, err := s.contract.NewProposal(constant.SMC_FUNC_ADD_EVENT, client.WithArguments(args...))
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
 		return e.TxErr(err.Error())
 	}
 
 	return s.execTxn(txn_proposal)
 }
 
+// Hàm lấy sự kiện
 func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
 	rp := []Event{}
 
-	fmt.Println("GetEvent", actorID, actorRole, sensorID, parameter)
 	args := []string{sensorID}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetAllEvents", args...)
+	evaluateResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_GET_ALL_EVENTS, args...)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return rp, err
@@ -303,10 +260,10 @@ func (s *service) GetEvent(ctx context.Context, actorID, actorRole, sensorID, pa
 	return rp, nil
 }
 
+// Hàm tìm kiếm sự kiện
 func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID, parameter string) ([]Event, error) {
 	rp := []Event{}
 
-	fmt.Println("SearchEvent", actorID, actorRole, sensorID, parameter)
 	if sensorID == "" && parameter == "" {
 		return nil, e.BadRequest("sensorID or parameter must be not empty")
 	}
@@ -319,9 +276,8 @@ func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID,
 	}
 
 	args := []string{key, fmt.Sprintf("%d", isSensor)}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetEventsByKey", args...)
+	evaluateResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_GET_EVENTS_BY_KEY, args...)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
 		return rp, err
 	}
 
@@ -331,57 +287,53 @@ func (s *service) SearchEvent(ctx context.Context, actorID, actorRole, sensorID,
 
 	err = json.Unmarshal([]byte(string(evaluateResponse)), &rp)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
 		return rp, nil
 	}
 
 	return rp, nil
 }
 
+// Hàm đặt lại mật khẩu
 func (s *service) ResetPassword(ctx context.Context, actorID, actorRole, userID string) error {
-	fmt.Println("ResetPassword", actorID, actorRole, userID)
-	if actorRole != "admin" {
+	if actorRole != constant.ADMIN_ROLE {
 		return e.Forbidden()
 	}
 
 	args := []string{actorID, userID, s.hashPassword(DEFAULT_PWD)}
-	txn_proposal, err := s.contract.NewProposal("ResetPassword", client.WithArguments(args...))
+	txn_proposal, err := s.contract.NewProposal(constant.SMC_FUNC_RESET_PWD, client.WithArguments(args...))
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
 		return e.TxErr(err.Error())
 	}
 
 	return s.execTxn(txn_proposal)
 }
 
+// Hàm xóa người dùng
 func (s *service) DeleteUser(ctx context.Context, actorID, actorRole, userID string) error {
-	fmt.Println("DeleteUser", actorID, actorRole, userID)
-	if actorRole != "admin" {
+	if actorRole != constant.ADMIN_ROLE {
 		return e.Forbidden()
 	}
 
 	args := []string{actorID, userID}
-	txn_proposal, err := s.contract.NewProposal("DeleteUser", client.WithArguments(args...))
+	txn_proposal, err := s.contract.NewProposal(constant.SMC_FUNC_DELETE_USER, client.WithArguments(args...))
 	if err != nil {
-		fmt.Printf("Error creating txn proposal: %s", err)
 		return e.TxErr(err.Error())
 	}
 
 	return s.execTxn(txn_proposal)
 }
 
+// Hàm lấy tất cả người dùng
 func (s *service) GetUsers(ctx context.Context, actorID, actorRole string) ([]User, error) {
 	rp := []User{}
 
-	fmt.Println("GetUsers", actorID, actorRole)
-	if actorRole != "admin" {
+	if actorRole != constant.ADMIN_ROLE {
 		return rp, e.Forbidden()
 	}
 
 	args := []string{}
-	evaluateResponse, err := s.contract.EvaluateTransaction("GetAllUsers", args...)
+	evaluateResponse, err := s.contract.EvaluateTransaction(constant.SMC_FUNC_GET_ALL_USERS, args...)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
 		return rp, err
 	}
 
